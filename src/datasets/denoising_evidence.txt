@@ -1,0 +1,123 @@
+=== BÁO CÁO MINH CHỨNG TIỀN XỬ LÝ (DENOISING AUDIT REPORT) ===
+
+NHÓM 1: LỌC THEO ĐỘ DÀI (GHOST NOISE)
+File: S002C003P010R002A004.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 1 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000349
+--------------------------------------------------
+File: S008C002P035R002A003.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 1 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.003152
+--------------------------------------------------
+File: S022C002P065R001A107.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 4 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000959
+--------------------------------------------------
+File: S015C003P017R001A018.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 6 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.002931
+--------------------------------------------------
+File: S032C003P067R001A106.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 9 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000654
+--------------------------------------------------
+File: S003C003P001R001A059.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 5 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000471
+--------------------------------------------------
+File: S029C003P006R001A095.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 11 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.143841
+--------------------------------------------------
+File: S022C003P064R002A112.skeleton (Gốc: 1 người)
+   -> Body 0: Loại bỏ (Quá ngắn, 11 frames)
+--------------------------------------------------
+File: S025C003P059R002A116.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 4 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.005520
+--------------------------------------------------
+File: S001C003P002R002A001.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Quá ngắn, 1 frames)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000982
+--------------------------------------------------
+
+NHÓM 2: LỌC THEO ĐỒ VẬT (BÀN/GHẾ SOFA)
+File: S031C002P044R001A098.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=96.1%)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.002727
+--------------------------------------------------
+File: S029C003P044R002A098.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.001710
+--------------------------------------------------
+File: S031C002P096R001A086.skeleton (Gốc: 2 người)
+   -> Body 0: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000243
+--------------------------------------------------
+File: S019C002P049R002A071.skeleton (Gốc: 2 người)
+   -> Body 0: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000351
+--------------------------------------------------
+File: S008C002P008R001A044.skeleton (Gốc: 1 người)
+   -> Body 0: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+--------------------------------------------------
+File: S013C003P018R002A026.skeleton (Gốc: 1 người)
+   -> Body 0: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+--------------------------------------------------
+File: S031C002P044R001A120.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.001706
+--------------------------------------------------
+File: S022C001P066R002A093.skeleton (Gốc: 2 người)
+   -> Body 1: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000344
+--------------------------------------------------
+File: S012C003P007R002A032.skeleton (Gốc: 1 người)
+   -> Body 0: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=79.5%)
+--------------------------------------------------
+File: S023C001P067R001A110.skeleton (Gốc: 2 người)
+   -> Body 0: Loại bỏ (Nhiễu vật thể/bàn ghế, InvalidFrames=100.0%)
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000627
+--------------------------------------------------
+
+NHÓM 3: LỌC THEO CHUYỂN ĐỘNG (MOTION VARIANCE)
+File: S024C001P057R002A076.skeleton (Gốc: 2 người)
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.042787
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.002174
+--------------------------------------------------
+File: S029C003P006R001A107.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.001433
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000336
+--------------------------------------------------
+File: S028C002P046R001A107.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000783
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000050
+--------------------------------------------------
+File: S013C003P017R002A057.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000588
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000401
+--------------------------------------------------
+File: S032C003P008R002A110.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000465
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000182
+--------------------------------------------------
+File: S032C002P106R001A120.skeleton (Gốc: 2 người)
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000297
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000204
+--------------------------------------------------
+File: S013C003P017R002A053.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000920
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000397
+--------------------------------------------------
+File: S001C001P003R001A052.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000834
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000738
+--------------------------------------------------
+File: S025C002P055R001A117.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000586
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000212
+--------------------------------------------------
+File: S030C001P088R001A112.skeleton (Gốc: 2 người)
+   -> Body 0: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.003252
+   -> Body 1: CHỌN (Diễn viên chính) - Mức độ chuyển động = 0.000490
+--------------------------------------------------

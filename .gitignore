@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# LaTeX build files
+report_datavis.aux
+report_datavis.log
+report_datavis.out
+report_datavis.toc
+report_datavis.synctex.gz
+report_datavis.fdb_latexmk
+report_datavis.fls
+report_datavis.pdf.lnk
+
+# IDEs and environments
+.vscode/
+.idea/
+.venv/
+env/
+venv/
+
+# Local scratch directory
+scratch/
