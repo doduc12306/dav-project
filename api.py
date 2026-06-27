@@ -3,7 +3,7 @@ import json
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from src.data_utils import read_skeleton_file, parse_skeleton_filename, NTU_CONNECTIONS
+from src.data_utils import read_skeleton_file, parse_skeleton_filename, NTU_CONNECTIONS, normalize_skeleton
 
 app = FastAPI(title="S-JEPA Demo API")
 
@@ -54,6 +54,7 @@ def predict_action(filename: str):
         
     try:
         joints, info = read_skeleton_file(filepath)
+        joints = normalize_skeleton(joints)
         # joints shape: (frames, bodies, joints, 3)
         # Convert numpy array to list for JSON response
         joints_list = joints.tolist()
