@@ -33,8 +33,18 @@ ACTION_NAMES = {
 def list_skeletons():
     if not os.path.exists(DATA_DIR):
         return {"files": []}
-    files = [f for f in os.listdir(DATA_DIR) if f.endswith(".skeleton")]
-    return {"files": sorted(files)[:200]}
+    files = []
+    try:
+        with os.scandir(DATA_DIR) as it:
+            for entry in it:
+                if entry.name.endswith(".skeleton") and entry.is_file():
+                    files.append(entry.name)
+                    if len(files) >= 15:
+                        break
+    except Exception as e:
+        print("Error reading directory:", e)
+        
+    return {"files": sorted(files)}
 
 @app.get("/api/predict/{filename}")
 def predict_action(filename: str):
