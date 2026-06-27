@@ -39,7 +39,7 @@ def list_skeletons():
             for entry in it:
                 if entry.name.endswith(".skeleton") and entry.is_file():
                     files.append(entry.name)
-                    if len(files) >= 15:
+                    if len(files) >= 3:
                         break
     except Exception as e:
         print("Error reading directory:", e)
