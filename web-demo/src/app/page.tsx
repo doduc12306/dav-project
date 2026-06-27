@@ -87,8 +87,8 @@ export default function DemoPage() {
     if (!body1) return;
 
     const x = body1.map((j: any[]) => j[0]);
-    const y = body1.map((j: any[]) => j[2]); // Z is depth in NTU, map to Y in Plotly
-    const z = body1.map((j: any[]) => -j[1]); // Y is height (downward) in NTU, map to -Z in Plotly
+    const y = body1.map((j: any[]) => j[2]); 
+    const z = body1.map((j: any[]) => j[1]); 
 
     const traces: any[] = [];
     
@@ -241,7 +241,7 @@ export default function DemoPage() {
                   paper_bgcolor: "transparent",
                   scene: {
                     aspectmode: "cube",
-                    camera: { eye: { x: 1.5, y: -1.5, z: 0.5 } },
+                    camera: { eye: { x: 2.2, y: -2.2, z: 0.8 } },
                     xaxis: { range: [-1, 1], showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "X", tickfont: {size: 10} },
                     yaxis: { range: [-1, 1], showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Depth", tickfont: {size: 10} },
                     zaxis: { range: [-1, 1.5], showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Height", tickfont: {size: 10} },
