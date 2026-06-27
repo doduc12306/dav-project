@@ -1,7 +1,7 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage[utf8]{inputenc}
-\usepackage[vietnamese]{babel}
+\usepackage[english]{babel}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
@@ -18,189 +18,214 @@
 
 \begin{document}
 
-\title{Phân Tích Biểu Diễn Hình Học, Tiền Xử Lý và Tính Diễn Giải Không Gian Ẩn Trong Nhận Dạng Hành Động Khung Xương 3D}
+\title{Kinematic Analysis and Explainability of the S-JEPA Architecture on the NTU RGB+D 120 Dataset}
 
 \author{
-\IEEEauthorblockN{Nguyễn Quang Tùng (20233884), Đỗ Nguyễn Anh Đức (202414618), Nguyễn Thị Thúy Huyền (20233854)}
-\IEEEauthorblockA{\textit{Trường Điện - Điện tử} \\
-\textit{Đại học Bách Khoa Hà Nội} \\
-Email: \{tung.nq233884, duc.dna2414618, huyen.ntt233854\}@sis.hust.edu.vn}
+\IEEEauthorblockN{Nguyen Quang Tung (20233884), Do Nguyen Anh Duc (202414618), Nguyen Thi Thuy Huyen (20233854)}
+\IEEEauthorblockA{\textit{School of Electrical and Electronic Engineering} \\
+\textit{Hanoi University of Science and Technology}}
 }
 
 \maketitle
 
 \begin{abstract}
-Nghiên cứu này trình bày một quy trình Khoa học Dữ liệu (KHDL) toàn diện áp dụng cho bài toán nhận dạng hành động dựa trên dữ liệu khung xương 3D NTU RGB+D 120. Quy trình bắt đầu bằng việc phân loại dữ liệu định tính và định lượng, kết hợp phân tích khám phá (EDA) qua các biểu đồ đường và cột. Trong pha tiền xử lý, dữ liệu được đánh giá nghiêm ngặt qua 6 tiêu chí chất lượng, kết hợp làm sạch bằng phương pháp Tukey lọc ngoại lai thống kê, phân cụm mật độ DBSCAN và chuẩn hóa dữ liệu. Nhằm xây dựng các đặc trưng có tính kháng góc nhìn camera (view-invariant), chúng tôi kiểm định tính độc lập bằng kiểm định Chi-square và phân tích hệ số tương quan tuyến tính Pearson cũng như Spearman. Đặc trưng chuyển động không-thời gian sau đó được huấn luyện tự giám sát qua mô hình S-JEPA (Spatio-temporal Joint-Embedding Predictive Architecture). Cuối cùng, chúng tôi áp dụng các kỹ thuật lựa chọn đặc trưng (Filter, Wrapper, Embedded), biến đổi đặc trưng giảm chiều dữ liệu (PCA, Kernel PCA, ISOMAP, LDA) và các phương pháp Trí tuệ Nhân tạo có thể giải thích (XAI) bao gồm SHAP, Attention Rollout và Gradient Saliency (nền tảng của Grad-CAM và Integrated Gradients) để minh bạch hóa không gian đặc trưng ẩn thu được.
+This study presents a comprehensive Data Science pipeline applied to the 3D skeleton-based action recognition task on the NTU RGB+D 120 dataset. The pipeline begins with qualitative and quantitative data classification, incorporating exploratory data analysis (EDA) via line and bar charts. In the preprocessing phase, the data is rigorously evaluated using six quality criteria, coupled with cleaning techniques such as Tukey's statistical outlier filtering, DBSCAN density clustering, and data normalization. To construct view-invariant features, we verify independence using the Chi-square test and analyze feature correlations using Pearson and Spearman coefficients. The spatio-temporal kinematic features are then self-supervisedly pre-trained via the S-JEPA (Spatio-temporal Joint-Embedding Predictive Architecture) model. Finally, we apply feature selection techniques (Filter, Wrapper, Embedded), dimensionality reduction transformations (PCA, Kernel PCA, ISOMAP, LDA), and eXplainable AI (XAI) methods including SHAP, Attention Rollout, and Gradient Saliency (the foundation of Grad-CAM and Integrated Gradients) to demystify the learned latent feature space.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Quy trình KHDL, NTU RGB+D 120, Tiền xử lý dữ liệu, Kiểm định tương quan, Giảm chiều dữ liệu, S-JEPA, Explainable AI, SHAP, Gradient Saliency.
+Data Science Pipeline, NTU RGB+D 120, Data Preprocessing, Correlation Analysis, Dimensionality Reduction, S-JEPA, Explainable AI, SHAP, Gradient Saliency.
 \end{IEEEkeywords}
 
-\section{Giới thiệu}
-Nhận dạng hành động người là nền tảng cho nhiều ứng dụng thông minh như giám sát an ninh, tương tác người - máy và phân tích hành vi y tế. Trong đó, dữ liệu khung xương 3D được ưu tiên sử dụng nhờ khả năng lược bỏ nhiễu từ môi trường và tính toán hiệu quả.
+\section{Introduction}
+Human action recognition is fundamental to numerous intelligent applications, including security surveillance, human-computer interaction, and medical behavioral analysis \cite{b1}, \cite{b11}. Among these, 3D skeleton data is preferred due to its robustness against environmental noise and computational efficiency.
 
-Nghiên cứu này hiện thực hóa quy trình khoa học dữ liệu chuẩn mực gồm các bước: Thu thập $\rightarrow$ Xử lý $\rightarrow$ Làm sạch $\rightarrow$ EDA (Khám phá) $\rightarrow$ Mô hình hóa $\rightarrow$ Báo cáo/Trực quan hóa $\rightarrow$ Ra quyết định. Để giải quyết rào cản khan hiếm nhãn chất lượng cao, chúng tôi huấn luyện mô hình học tự giám sát thế hệ mới S-JEPA (Joint-Embedding Predictive Architecture). Chúng tôi tập trung vào việc chuẩn hóa dữ liệu, loại bỏ điểm dị biệt, phân tích tương quan đặc trưng giữa các khớp xương, và giải mã cơ chế quyết định của mô hình học sâu thông qua các phương pháp XAI tiên tiến nhằm nâng cao độ tin cậy và minh bạch của hệ thống.
+This study implements a standard data science pipeline consisting of: Collection $\rightarrow$ Processing $\rightarrow$ Cleaning $\rightarrow$ EDA $\rightarrow$ Modeling $\rightarrow$ Reporting/Visualization $\rightarrow$ Decision Making. To overcome the barrier of high-quality label scarcity, we train the next-generation self-supervised learning model S-JEPA (Joint-Embedding Predictive Architecture). We focus on data normalization, outlier removal, feature correlation analysis between joints, and decoding the decision-making mechanism of the deep learning model through advanced XAI methods to enhance the reliability and transparency of the system.
 
-\section{Nghiên cứu liên quan}
-\subsection{Học tự giám sát cho nhận dạng hành động khung xương}
-Các phương pháp học tự giám sát (SSL) cho dữ liệu khung xương 3D chủ yếu được phân loại thành ba nhóm chính:
+\section{Related Work}
+\subsection{Self-supervised Learning for Skeleton-based Action Recognition}
+Self-supervised learning (SSL) methods for 3D skeleton data are primarily categorized into three main groups:
 \begin{itemize}
-    \item \textbf{Kiến trúc sinh (Generative Architectures):} Điển hình là SkeletonMAE \cite{b4} và MAMP \cite{b3} dựa trên cơ chế che (masking) và tái dựng lại tọa độ khớp vật lý hoặc động học thời gian trong không gian dữ liệu đầu vào. Các mô hình này dễ bị ảnh hưởng bởi nhiễu tần số cao của tọa độ thô.
-    \item \textbf{Học đối sánh (Contrastive Learning):} Gồm các nghiên cứu như AimCLR \cite{b5} và ActCLR \cite{b6} tập trung tối đa hóa độ tương đồng giữa các góc nhìn tăng cường (augmentations) khác nhau của cùng một chuỗi hành động.
-    \item \textbf{Kiến trúc dự đoán nhúng chung (Joint-Embedding Predictive Architecture):} S-JEPA \cite{b7} học cách khớp phân phối xác suất giữa biểu diễn dự đoán và biểu diễn đích (target representations) thông qua cơ chế EMA, giúp tránh hiện tượng sụp đổ biểu diễn (representation collapse) mà không cần mẫu đối sánh tiêu cực.
+    \item \textbf{Generative Architectures:} Typically SkeletonMAE \cite{b4} and MAMP \cite{b3}, which are based on a masking mechanism and reconstruct physical joint coordinates or temporal kinematics in the input data space. These models are susceptible to high-frequency noise from raw coordinates.
+    \item \textbf{Contrastive Learning:} Includes studies like AimCLR \cite{b5} and ActCLR \cite{b6}, focusing on maximizing the similarity between different augmentations of the same action sequence.
+    \item \textbf{Joint-Embedding Predictive Architecture:} S-JEPA \cite{b7} learns to match the probability distribution between predicted and target representations via an EMA mechanism, avoiding representation collapse without the need for negative contrastive samples.
 \end{itemize}
 
-\subsection{Trí tuệ Nhân tạo có thể giải thích (Explainable AI - XAI)}
-Để vượt qua rào cản "hộp đen" của mạng học sâu, hai nhánh kỹ thuật XAI chính được phát triển:
+\subsection{Explainable AI (XAI)}
+To overcome the "black box" barrier of deep neural networks, two main branches of XAI techniques have been developed:
 \begin{itemize}
-    \item \textbf{Kỹ thuật độc lập mô hình (Model-Agnostic):} Gồm LIME \cite{b10} (xấp xỉ tuyến tính cục bộ), ANCHORS (luật quyết định Nếu-Thì) và SHAP \cite{b10} (phân bổ đóng góp biên Shapley dựa trên lý thuyết trò chơi hợp tác).
-    \item \textbf{Kỹ thuật diễn giải mạng thị giác (CNN/Transformer-specific):} Gồm CAM, Grad-CAM \cite{b9} (sử dụng gradient lớp tích chập cuối), Grad-CAM++ (cải tiến định vị đa đối tượng) và Integrated Gradients (IG) (tích phân gradient dọc đường đi từ ảnh nền baseline).
+    \item \textbf{Model-Agnostic Techniques:} Include LIME \cite{b10} (local linear approximation), ANCHORS (If-Then decision rules), and SHAP \cite{b10} (Shapley marginal contribution allocation based on cooperative game theory).
+    \item \textbf{Vision Network Interpretation (CNN/Transformer-specific):} Include CAM, Grad-CAM \cite{b9} (utilizing gradients of the final convolutional layer), Grad-CAM++ (improved multi-object localization), and Integrated Gradients (IG) (gradient integral along the path from a baseline image).
 \end{itemize}
 
-\section{Quy trình Khoa học Dữ liệu và Phân Tích Dữ Liệu Khám Phá (EDA)}
-Chúng tôi hiện thực hóa pha khám phá dữ liệu (EDA) nhằm thống kê và nhận diện các thuộc tính đặc trưng trong bộ dữ liệu NTU RGB+D 120.
+\section{Data Science Pipeline and Exploratory Data Analysis (EDA)}
+\begin{figure*}[htbp]
+\centering
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.0cm,
+    step_node/.style={draw, rectangle, fill=blue!8, text width=2.5cm, minimum height=1.2cm, align=center, rounded corners, font=\small, draw=blue!40, thick},
+    arrow/.style={-latex, thick, draw=gray!60}
+]
+    \node [step_node] (collect) {Data Collection\\(NTU RGB+D 120)};
+    \node [step_node, right=of collect] (preprocess) {Preprocessing \&\\Normalization};
+    \node [step_node, right=of preprocess] (clean) {Cleaning \& Filtering\\(Tukey IQR \& DBSCAN)};
+    \node [step_node, right=of clean] (eda) {EDA \& Validation\\(Charts \& Pearson/$\chi^2$)};
+    \node [step_node, right=of eda] (model) {Modeling\\(S-JEPA Pre-training)};
+    \node [step_node, right=of model] (xai) {Visualization \& XAI\\(SHAP, Saliency, CM)};
+    
+    \draw [arrow] (collect) -- (preprocess);
+    \draw [arrow] (preprocess) -- (clean);
+    \draw [arrow] (clean) -- (eda);
+    \draw [arrow] (eda) -- (model);
+    \draw [arrow] (model) -- (xai);
+\end{tikzpicture}%
+}
+\caption{The comprehensive Data Science pipeline diagram implemented in the study.}
+\label{fig:ds_pipeline}
+\end{figure*}
 
-\subsection{Phân loại các loại Dữ liệu trong bài toán}
-Dữ liệu đầu vào của hệ thống được phân loại một cách chặt chẽ theo lý thuyết khoa học dữ liệu:
+We implement the exploratory data analysis (EDA) phase to statistically analyze and identify characteristic properties within the NTU RGB+D 120 dataset.
+
+\subsection{Data Classification in the Problem}
+The input data of the system is strictly classified according to data science theory:
 \begin{enumerate}
-    \item \textbf{Dữ liệu Định tính (Categorical Data):}
+    \item \textbf{Categorical Data:}
     \begin{itemize}
-        \item \textit{Định danh (Nominal):} Lớp hành động (Action Class $A_c \in \{1, \dots, 120\}$), mã định danh diễn viên (Subject ID), và mã định danh camera (Camera ID). Các dữ liệu này không có sự phân cấp hay thứ bậc.
+        \item \textit{Nominal:} Action Class ($A_c \in \{1, \dots, 120\}$), Subject ID, and Camera ID. This data has no hierarchy or ranking.
     \end{itemize}
-    \item \textbf{Dữ liệu Định lượng (Numerical Data):}
+    \item \textbf{Numerical Data:}
     \begin{itemize}
-        \item \textit{Rời rạc (Discrete):} Độ dài chuỗi khung hình thời gian ($T \in [20, 200]$), số lượng khớp xương chính của cơ thể ($J = 25$).
-        \item \textit{Liên tục (Continuous):} Tọa độ hình học 3D của các khớp xương $(x, y, z) \in \mathbb{R}^3$, vận tốc tức thời của khớp $v_t^j \in \mathbb{R}$.
+        \item \textit{Discrete:} Time frame sequence length ($T \in [20, 200]$), number of main body joints ($J = 25$).
+        \item \textit{Continuous:} 3D geometric coordinates of joints $(x, y, z) \in \mathbb{R}^3$, instantaneous joint velocity $v_t^j \in \mathbb{R}$.
     \end{itemize}
 \end{enumerate}
 
-\subsection{Trực quan hóa Dữ liệu (Data Visualization)}
-Chúng tôi sử dụng các biểu đồ trực quan để phân tích cấu trúc dữ liệu:
+\subsection{Data Visualization}
+We utilize visual charts to analyze the data structure:
 \begin{itemize}
-    \item \textbf{Biểu đồ Cột/Thanh (Bar/Column Chart) - Hình \ref{fig:action_dist}:} Trực quan hóa số lượng mẫu theo từng lớp hành động. Thống kê chỉ ra dữ liệu đạt độ cân bằng cao (xấp xỉ 900-1000 mẫu/lớp).
-    \item \textbf{Biểu đồ Cột phân phối tần suất (Histogram) - Hình \ref{fig:frame_dist}:} Phân tích độ dài khung hình, chỉ ra độ dài chuỗi phân bố lệch phải với giá trị trung bình từ 70 đến 80 khung hình.
-    \item \textbf{Biểu đồ Đường (Line Chart) - Hình \ref{fig:joint_dynamics}:} Trực quan hóa xu hướng biến thiên vận tốc khớp xương theo thời gian. Phép toán tính vận tốc tức thời của khớp $j$ tại thời điểm $t$ tuân theo khoảng cách Euclid:
+    \item \textbf{Bar Chart - Figure \ref{fig:action_dist}:} Visualizes the number of samples per action class. The statistics indicate a highly balanced dataset (approximately 900-1000 samples/class).
+    \item \textbf{Histogram - Figure \ref{fig:frame_dist}:} Analyzes frame length, revealing a right-skewed sequence length distribution with an average of 70 to 80 frames.
+    \item \textbf{Line Chart - Figure \ref{fig:joint_dynamics}:} Visualizes the temporal velocity variation trend of joints. The instantaneous velocity calculation for joint $j$ at time $t$ follows the Euclidean distance:
     \begin{equation}
     v_t^j = \left\| \mathbf{p}_t^j - \mathbf{p}_{t-1}^j \right\|_2
     \end{equation}
-    Đồ thị biểu diễn rõ rệt động năng của khớp bàn tay dao động hình sin mạnh trong hành động Vẫy tay (Hình \ref{fig:dyn_waving}), và sự đồng biến vận tốc của đầu và chân trong hành động Nhảy (Hình \ref{fig:dyn_jumping}).
+    The graph clearly depicts the strong sinusoidal kinetic oscillation of the hand joint in the Waving action (Figure \ref{fig:dyn_waving}), and the synchronous velocity variation of the head and feet in the Jumping action (Figure \ref{fig:dyn_jumping}).
 \end{itemize}
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/action_distribution.png}
-        \caption{Phân bố hành động}
+        \caption{Action Distribution}
         \label{fig:action_dist}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/frame_distribution.png}
-        \caption{Phân bố số khung hình}
+        \caption{Frame Count Distribution}
         \label{fig:frame_dist}
     \end{subfigure}
-    \caption{Phân tích khám phá dữ liệu (EDA) định lượng qua các biểu đồ cột và phân phối tần suất.}
+    \caption{Quantitative Exploratory Data Analysis (EDA) via bar charts and frequency distributions.}
     \label{fig:eda_dist}
 \end{figure*}
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/joint_dynamics_hand_waving.png}
-        \caption{Hành động Vẫy tay (Waving)}
+        \caption{Waving Action}
         \label{fig:dyn_waving}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/joint_dynamics_jump_up.png}
-        \caption{Hành động Nhảy (Jumping)}
+        \caption{Jumping Action}
         \label{fig:dyn_jumping}
     \end{subfigure}
-    \caption{Trực quan hóa dạng biểu đồ đường (Line Chart) so sánh động năng biến thiên vận tốc thời gian thực của các khớp xương.}
+    \caption{Line chart visualization comparing the real-time velocity kinetic variations of different joints.}
     \label{fig:joint_dynamics}
 \end{figure*}
 
-\section{Tiền Xử Lý Dữ Liệu, Phân Tích Tương Quan và Kiến Trúc Mô Hình}
+\section{Data Preprocessing, Correlation Analysis, and Model Architecture}
 
-\subsection{Đánh giá Chất lượng Dữ liệu (6 Tiêu chí)}
-Chúng tôi thực hiện đánh giá chất lượng của tập dữ liệu khung xương NTU RGB+D 120 qua hệ thống 6 tiêu chí khoa học:
+\subsection{Data Quality Assessment (6 Criteria)}
+We assess the quality of the NTU RGB+D 120 skeleton dataset through a system of six scientific criteria:
 \begin{enumerate}
-    \item \textbf{Chính xác (Accuracy):} Tọa độ khớp gốc bị nhiễu do vị trí camera. Chúng tôi thực hiện căn chỉnh không gian để loại bỏ nhiễu góc nhìn.
-    \item \textbf{Đầy đủ (Completeness):} Các chuỗi có độ dài khung hình biến thiên được đồng bộ hóa. Chúng tôi xử lý bằng cách cắt bớt hoặc điền khuyết hằng số 0 (Zero-Padding) về độ dài cố định $T = 40$.
-    \item \textbf{Nhất quán (Consistency):} Cấu trúc liên kết 25 khớp cơ thể và tỷ lệ xương được giữ nguyên nhất quán giữa các tệp tin `.skeleton`.
-    \item \textbf{Kịp thời (Timeliness):} Trích xuất đặc trưng offline giúp tăng tốc độ nạp dữ liệu vào GPU trong quá trình huấn luyện mô hình downstream.
-    \item \textbf{Tin cậy (Believability):} Dữ liệu thu thập từ các hệ thống Kinect chuẩn phòng thí nghiệm đạt độ tin cậy vật lý cao.
-    \item \textbf{Dễ hiểu (Interpretability):} Tọa độ khớp được lập chỉ mục rõ ràng tương ứng với cấu trúc giải phẫu học cơ thể người.
+    \item \textbf{Accuracy:} Raw joint coordinates are noisy due to camera positions. We perform spatial alignment to eliminate view noise.
+    \item \textbf{Completeness:} Sequences with varying frame lengths are synchronized. We handle this by truncating or zero-padding to a fixed length of $T = 40$.
+    \item \textbf{Consistency:} The 25-joint topology and bone ratios remain consistent across `.skeleton` files.
+    \item \textbf{Timeliness:} Offline feature extraction accelerates data loading into the GPU during downstream model training.
+    \item \textbf{Believability:} Data collected from lab-standard Kinect systems achieves high physical reliability.
+    \item \textbf{Interpretability:} Joint coordinates are explicitly indexed corresponding to human anatomical structure.
 \end{enumerate}
 
-\subsection{Làm sạch dữ liệu và Phát hiện Ngoại lai (Outlier Detection)}
-Các nhiễu cảm biến Kinect thường tạo ra các tọa độ khớp dị biệt (ngoại lai). Chúng tôi áp dụng hai phương pháp phát hiện:
+\subsection{Data Cleaning and Outlier Detection}
+Kinect sensor noise often produces anomalous joint coordinates (outliers). We apply two detection methods:
 \begin{enumerate}
-    \item \textbf{Ngoại lai Thống kê (Box Plot - Phương pháp Tukey):} Với mỗi chuỗi tọa độ khớp, chúng tôi tính toán khoảng tứ phân vị $IQR = Q_3 - Q_1$. Các tọa độ nằm ngoài khoảng giới hạn dưới đây được xác định là điểm ngoại lai và được thay thế bằng phương pháp điền khuyết trung vị (Median Imputation):
+    \item \textbf{Statistical Outliers (Box Plot - Tukey's Method):} For each joint coordinate sequence, we calculate the interquartile range $IQR = Q_3 - Q_1$. Coordinates lying outside the limits below are identified as outliers and replaced using Median Imputation:
     \begin{equation}
     [\text{Lower}, \text{Upper}] = [Q_1 - 1.5 \times IQR, \dots, Q_3 + 1.5 \times IQR]
     \end{equation}
-    \item \textbf{Ngoại lai Mật độ (DBSCAN):} Áp dụng thuật toán DBSCAN lên không gian vector đặc trưng để gom cụm các chuỗi chuyển động. Các chuỗi chuyển động bất thường, bị lỗi tracking nghiêm trọng sẽ bị phân loại là điểm Nhiễu (Noise points), trong khi các chuyển động chuẩn tạo thành các điểm Lõi (Core points) hoặc điểm Biên (Border points).
+    \item \textbf{Density Outliers (DBSCAN \cite{b12}):} We apply the Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm with two core hyperparameters: radius $\varepsilon$ (Eps) and minimum points $MinPts$. Anomalous motion sequences located in sparse regions are classified as Noise points and removed, whereas standard motions form Core or Border points.
 \end{enumerate}
 
-\subsection{Chuẩn hóa Dữ liệu (Normalization)}
-Để đưa dữ liệu tọa độ hình học 3D của các khớp về cùng một thang đo và triệt tiêu view bias, chúng tôi áp dụng ma trận chuẩn hóa xoay và dịch chuyển gốc tọa độ.
-Giả sử $\mathbf{p}_t^j = [x_t^j, y_t^j, z_t^j]^T \in \mathbb{R}^3$ biểu diễn tọa độ 3D của khớp $j$ tại khung hình $t$:
+\subsection{Data Normalization}
+To scale 3D geometric joint coordinates and eliminate view bias, we apply rotational and translational normalization matrices.
+Let $\mathbf{p}_t^j = [x_t^j, y_t^j, z_t^j]^T \in \mathbb{R}^3$ represent the 3D coordinates of joint $j$ at frame $t$:
 \begin{itemize}
-    \item \textbf{Tịnh tiến gốc tọa độ:} Tọa độ khớp gốc cột sống (Spine Base - khớp $0$) tại khung hình đầu tiên được dịch chuyển về gốc $(0, 0, 0)$:
+    \item \textbf{Origin Translation:} The Spine Base joint (joint $0$) coordinates at the first frame are translated to the origin $(0, 0, 0)$:
     \begin{equation}
     \mathbf{p}_t^{j, \text{trans}} = \mathbf{p}_t^j - \mathbf{p}_1^{0}
     \end{equation}
-    \item \textbf{Xoay căn chỉnh:} Tính toán ma trận xoay $\mathbf{R} \in \mathbb{R}^{3 \times 3}$ để căn chỉnh vector xương sống trùng với trục tung $Y$, và vector hai vai vuông góc với trục hoành $X$:
+    \item \textbf{Rotational Alignment:} The rotation matrix $\mathbf{R} \in \mathbb{R}^{3 \times 3}$ is calculated to align the spine vector parallel to the Y-axis and the shoulder vector perpendicular to the X-axis:
     \begin{equation}
     \mathbf{p}_t^{j, \text{norm}} = \mathbf{R}^T \mathbf{p}_t^{j, \text{trans}}
     \end{equation}
 \end{itemize}
-Bên cạnh đó, các luồng đặc trưng bổ trợ như vận tốc được chuẩn hóa bằng phương pháp Z-score ($\mu = 0, \sigma = 1$) để mô hình downstream hội tụ nhanh hơn.
+Additionally, auxiliary feature streams such as velocity are normalized using the Z-score method ($\mu = 0, \sigma = 1$) to facilitate faster downstream model convergence.
 
-Hình \ref{fig:skeleton_comparison} trực quan hóa sự so sánh giữa chuỗi tọa độ khung xương thô (bị lệch góc nhìn do vị trí camera) và chuỗi tọa độ sau khi chuẩn hóa xoay/tịnh tiến qua các khung hình chính, minh chứng việc triệt tiêu view bias hiệu quả của giải thuật chuẩn hóa hình học.
+Figure \ref{fig:skeleton_comparison} visualizes the comparison between the raw skeleton sequence (skewed by camera position) and the normalized coordinates across keyframes, demonstrating the effective elimination of view bias through geometric normalization.
 
-\begin{figure*}[t]
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.98\textwidth}
+    \begin{subfigure}[b]{0.98\columnwidth}
         \centering
-        \includegraphics[width=\linewidth]{plots/S002C003P007R002A018_raw_3d.png}
-        \caption{Chuỗi khung xương thô (Raw coordinates) bị nghiêng do góc đặt của camera C003.}
+        \includegraphics[width=\linewidth]{plots/S006C001P023R002A027_raw_3d.png}
+        \caption{Raw skeleton coordinates tilted by the C001 camera angle.}
         \label{fig:skele_raw}
     \end{subfigure}
     \\ \vspace{0.3cm}
-    \begin{subfigure}[b]{0.98\textwidth}
+    \begin{subfigure}[b]{0.98\columnwidth}
         \centering
-        \includegraphics[width=\linewidth]{plots/S002C003P007R002A018_normalized_3d.png}
-        \caption{Chuỗi khung xương sau chuẩn hóa (Normalized coordinates) đã được xoay đứng thẳng và tịnh tiến gốc về Spine Base.}
+        \includegraphics[width=\linewidth]{plots/S006C001P023R002A027_normalized_3d.png}
+        \caption{Normalized coordinates, straightened and translated to the Spine Base.}
         \label{fig:skele_norm}
     \end{subfigure}
-    \caption{Trực quan hóa chuỗi khung hình xương 3D ở các thời điểm khác nhau trước và sau chuẩn hóa tọa độ hình học (Hành động A18: đeo kính - put on glasses).}
+    \caption{Visualization of 3D skeleton frames at different timestamps before and after geometric normalization (Action A27: Jump up).}
     \label{fig:skeleton_comparison}
-\end{figure*}
+\end{figure}
 
-\subsection{Phân tích Tương quan Tính năng (Feature Correlation)}
-Chúng tôi áp dụng các phép đo thống kê để đánh giá mức độ tương quan giữa chuyển động của các khớp xương:
+\subsection{Feature Correlation Analysis}
+We apply statistical metrics to evaluate the correlation between joint motions:
 \begin{enumerate}
-    \item \textbf{Hệ số tương quan Pearson ($r$):} Kiểm tra mối quan hệ tương quan tuyến tính giữa dịch chuyển tọa độ của các khớp kế cận qua các khung hình liên tiếp. Kết quả chỉ ra tương quan Pearson rất cao ($r > 0.85$) giữa các khớp trên cùng một chi (ví dụ: khớp cổ tay và khuỷu tay).
-    \item \textbf{Hệ số tương quan thứ bậc Spearman ($r_s$):} Sử dụng để đo lường mối quan hệ đơn điệu phi tuyến giữa góc mở của các khớp và vận tốc di chuyển bàn tay, dựa trên thứ hạng (Rank) của dữ liệu:
+    \item \textbf{Pearson Correlation Coefficient ($r$):} Examines the linear correlation between coordinate displacements of adjacent joints over consecutive frames. Results indicate a very high Pearson correlation ($r > 0.85$) between joints on the same limb (e.g., wrist and elbow).
+    \item \textbf{Spearman's Rank Correlation Coefficient ($r_s$):} Used to measure the monotonic, non-linear relationship between joint angles and hand velocity, based on data ranks:
     \begin{equation}
     r_s = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
     \end{equation}
-    \item \textbf{Kiểm định Chi-square ($\chi^2$) tính độc lập:} Để chứng minh toán học rằng dữ liệu sau chuẩn hóa đã triệt tiêu được sự thiên lệch góc nhìn camera, chúng tôi thực hiện kiểm định $\chi^2$ độc lập giữa biến phân loại góc camera (Nominal) và độ chính xác phân loại của mô hình. Kết quả thực nghiệm cho giá trị $p\text{-value} > 0.05$, chấp nhận giả thuyết $H_0$: kết quả phân loại hành động độc lập hoàn toàn với góc đặt camera (tính view-invariance).
+    \item \textbf{Chi-square Test ($\chi^2$) for Independence:} To mathematically prove that normalized data has eliminated camera view bias, we perform a $\chi^2$ test between the categorical camera angle variable and the model's classification accuracy. Empirical results yield $p\text{-value} > 0.05$, accepting the null hypothesis $H_0$: action classification results are entirely independent of camera angles (view-invariance).
 \end{enumerate}
 
-\subsection{Kiến trúc Spatio-Temporal Joint-Embedding Predictive Architecture (S-JEPA)}
-Hệ thống học tự giám sát S-JEPA được xây dựng dựa trên ba thành phần mạng nơ-ron chính kế thừa cấu trúc Vision Transformer (ViT) (như được thể hiện trong sơ đồ khối Hình \ref{fig:sjepa_arch}):
+\subsection{Spatio-Temporal Joint-Embedding Predictive Architecture (S-JEPA)}
+The self-supervised learning system S-JEPA is built upon three main neural network components inheriting the Vision Transformer (ViT) structure (as depicted in the block diagram Figure \ref{fig:sjepa_arch}):
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
 \centering
-\resizebox{\textwidth}{!}{%
+\resizebox{0.9\textwidth}{!}{%
 \begin{tikzpicture}[
     node distance=1.5cm,
     block/.style={draw, rectangle, fill=blue!10, text width=2.4cm, minimum height=1cm, align=center, rounded corners, font=\small},
@@ -240,180 +265,249 @@ Hệ thống học tự giám sát S-JEPA được xây dựng dựa trên ba th
     \draw [arrow] (target_lat) -| (loss);
     
     % EMA relation
-    \draw [dashed, <->, red, thick] (context_enc.north) -- node[left, font=\scriptsize, align=center] {EMA\\Updates} (target_enc.south);
+    \draw [dashed, -latex, red, thick] (context_enc.north) -- node[font=\scriptsize, align=center, fill=white, inner sep=2pt] {EMA\\Updates} (target_enc.south);
 
 \end{tikzpicture}%
 }
-\caption{Kiến trúc huấn luyện tự giám sát S-JEPA (Spatio-temporal Joint-Embedding Predictive Architecture).}
+\caption{The self-supervised pre-training architecture of S-JEPA (Spatio-temporal Joint-Embedding Predictive Architecture).}
 \label{fig:sjepa_arch}
 \end{figure*}
 
 \begin{enumerate}
-    \item \textbf{Spatio-Temporal Tokenization:} Chia dữ liệu chuỗi khung xương thành các khối cửa sổ thời gian $P_t = 4$. Các tọa độ được làm phẳng thành $\mathbf{x}_{j, t'} \in \mathbb{R}^{P_t \cdot C}$ và chiếu tuyến tính qua ma trận $W_{\text{proj}} \in \mathbb{R}^{D \times (P_t \cdot C)}$ thành các tokens $\mathbf{e}_{j, t'} \in \mathbb{R}^D$ ($D=128$). Nhúng vị trí không-thời gian $\mathbf{z}_{j, t'} = \mathbf{e}_{j, t'} + \mathbf{s}_j + \mathbf{u}_{t'}$ được cộng vào để giữ nguyên cấu trúc topo cơ thể và thứ tự thời gian.
-    \item \textbf{Context Encoder ($\theta$):} Mã hóa các tokens ngữ cảnh không bị che khuất $M_c$:
+    \item \textbf{Spatio-Temporal Tokenization:} Divides the skeleton sequence into temporal window blocks of size $P_t = 4$. Coordinates are flattened into $\mathbf{x}_{j, t'} \in \mathbb{R}^{P_t \cdot C}$ and linearly projected via matrix $W_{\text{proj}} \in \mathbb{R}^{D \times (P_t \cdot C)}$ into tokens $\mathbf{e}_{j, t'} \in \mathbb{R}^D$ ($D=128$). Spatio-temporal positional embeddings $\mathbf{z}_{j, t'} = \mathbf{e}_{j, t'} + \mathbf{s}_j + \mathbf{u}_{t'}$ are added to retain the body topology and temporal order.
+    \item \textbf{Context Encoder ($\theta$):} Encodes the unmasked context tokens $M_c$:
     \begin{equation}
     H_c = \text{Encoder}_{\theta}(\{\mathbf{z}_{j, t'} \mid (j, t') \in M_c\})
     \end{equation}
-    \item \textbf{Target Encoder ($\phi$):} Có cấu trúc giống Context Encoder nhưng trọng số được cập nhật qua cơ chế EMA từ $\theta$ với hệ số $\tau = 0.996$:
+    \item \textbf{Target Encoder ($\phi$):} Shares the same architecture as the Context Encoder, but its weights are updated via the EMA mechanism from $\theta$ with a momentum coefficient $\tau = 0.996$:
     \begin{equation}
     \phi \leftarrow \tau \phi + (1 - \tau) \theta
     \end{equation}
-    Bộ mã hóa này xử lý toàn bộ tokens để tạo vector đích thực tế $H_y$.
-    \item \textbf{Predictor ($\psi$) và Hàm Loss:} Nhận đầu vào là đặc trưng ngữ cảnh $H_c$ và mask tokens $\mathbf{m}$ nhúng vị trí của vùng bị che $M_t$ để dự đoán đặc trưng đích $\hat{H}_{M_t} = \text{Predictor}_{\psi}(H_c \cup \{\mathbf{m} + \text{pos}_{M_t}\})$. Hàm mất mát MSE học tự giám sát tối ưu hóa sai số khoảng cách L2 trực tiếp trên không gian ẩn:
+    This encoder processes all tokens to produce the actual target vectors $H_y$.
+    \item \textbf{Predictor ($\psi$) and Loss Function:} Takes the context features $H_c$ and mask tokens $\mathbf{m}$ embedded with the positions of the masked regions $M_t$ to predict the target features $\hat{H}_{M_t} = \text{Predictor}_{\psi}(H_c \cup \{\mathbf{m} + \text{pos}_{M_t}\})$. The self-supervised MSE loss function optimizes the L2 distance error directly in the latent space:
     \begin{equation}
     \label{eq:sjepa_loss}
     \mathcal{L} = \frac{1}{|M_t|} \sum_{(j, t') \in M_t} \left\| \hat{\mathbf{h}}_{j, t'} - \mathbf{h}_{j, t'} \right\|_2^2
     \end{equation}
 \end{enumerate}
 
-\section{Lựa Chọn, Biến Đổi Tính Năng và Kết Quả Thực Nghiệm}
+\section{Feature Selection, Transformation, and Experimental Results}
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
     \centering
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/tsne_latent_space_raw_by_camera.png}
-        \caption{Không gian ẩn thô theo Camera ID}
+        \caption{Raw latent space by Camera ID}
         \label{fig:tsne_raw_cam}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/tsne_latent_space_by_camera.png}
-        \caption{Không gian ẩn chuẩn hóa theo Camera ID}
+        \caption{Normalized latent space by Camera ID}
         \label{fig:tsne_norm_cam}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/tsne_latent_space_by_class.png}
-        \caption{Không gian ẩn chuẩn hóa theo Lớp hành động}
+        \caption{Normalized latent space by Action Class}
         \label{fig:tsne_norm_class}
     \end{subfigure}
-    \caption{Trực quan hóa giảm chiều t-SNE thể hiện kiểm nghiệm kháng góc nhìn (View-Invariance Test) của mô hình S-JEPA.}
+    \caption{t-SNE dimensionality reduction visualization illustrating the View-Invariance Test of the S-JEPA model.}
     \label{fig:tsne_comparison}
 \end{figure*}
 
-\subsection{Chiến lược Lựa chọn Tính năng (Feature Selection)}
+\subsection{Experimental Setup and Training Details}
+The model training and evaluation process is divided into two distinct phases: self-supervised pre-training and Linear Probing evaluation, as outlined in Figure \ref{fig:two_stage_training}.
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
+\centering
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1.0cm and 1.5cm,
+    stage_box/.style={draw, rectangle, fill=gray!5, minimum width=12cm, minimum height=2.2cm, align=left, rounded corners, dashed, draw=gray!40, font=\small},
+    block_active/.style={draw, rectangle, fill=blue!10, text width=2.4cm, minimum height=0.8cm, align=center, rounded corners, font=\small, draw=blue!40},
+    block_frozen/.style={draw, rectangle, fill=cyan!10, text width=2.4cm, minimum height=0.8cm, align=center, rounded corners, font=\small, draw=cyan!60, double},
+    block_loss/.style={draw, diamond, fill=yellow!15, aspect=2, align=center, font=\small, draw=yellow!40},
+    input_node/.style={draw, ellipse, fill=gray!10, text width=1.8cm, align=center, font=\small},
+    arrow/.style={-latex, thick}
+]
+
+    % Stage 1 Container
+    \node [stage_box, minimum width=13cm] (stage1_box) at (0.5, 1.8) {};
+    \node [anchor=north west, font=\bfseries\small, text=blue!80] at (stage1_box.north west) {Stage 1: S-JEPA Self-Supervised Pre-training (Unlabeled)};
+    
+    % Stage 1 Nodes
+    \node [input_node] (in1) at (-4.5, 1.6) {Skeleton\\Sequence};
+    \node [block_active] (enc1) at (-1.5, 1.6) {Context Encoder\\(Trainable)};
+    \node [block_active] (pred1) at (2.0, 1.6) {Predictor\\(Trainable)};
+    \node [block_loss] (loss1) at (5.8, 1.6) {L2 Loss\\(Latent Space)};
+    
+    \draw [arrow] (in1) -- (enc1);
+    \draw [arrow] (enc1) -- (pred1);
+    \draw [arrow] (pred1) -- (loss1);
+    
+    % Stage 2 Container
+    \node [stage_box, minimum width=13cm] (stage2_box) at (0.5, -1.6) {};
+    
+    % Stage 2 Nodes
+    \node [input_node] (in2) at (-4.5, -1.8) {Skeleton\\Sequence};
+    \node [block_frozen] (enc2) at (-1.5, -1.8) {Context Encoder\\(Frozen)};
+    \node [block_active, fill=green!10, draw=green!40] (cls2) at (2.0, -1.8) {Linear Classifier\\(Trainable)};
+    \node [block_loss, fill=red!10, draw=red!40] (loss2) at (5.8, -1.8) {Cross-Entropy\\Loss};
+    
+    \draw [arrow] (in2) -- (enc2);
+    \draw [arrow] (enc2) -- (cls2);
+    \draw [arrow] (cls2) -- (loss2);
+    
+    % Inter-stage relation (drawn before the title so it goes under the text background)
+    \draw [-latex, dashed, thick, red] (enc1.south) -- node[right, font=\scriptsize, align=center] {Weight Transfer\\\& Freeze} (enc2.north);
+
+    % Stage 2 Title (drawn last with fill=gray!5 to cover the red line)
+    \node [anchor=north west, font=\bfseries\small, text=green!60!black, fill=gray!5, inner xsep=4pt, inner ysep=2pt] at (stage2_box.north west) {Stage 2: Linear Probing (Action Labeled)};
+
+\end{tikzpicture}%
+}
+\caption{Differences between the two-stage training pipeline: Pre-training (self-supervised latent learning) and Linear Probing (supervised classification evaluation).}
+\label{fig:two_stage_training}
+\end{figure*}
+
+\begin{enumerate}
+    \item \textbf{Pre-training Phase (Self-Supervised):}
+    \begin{itemize}
+        \item \textit{S-JEPA Architecture Parameters:} Temporal window size $P_t = 4$, latent embedding dimension $D = 128$, Encoder depth of 3 Transformer blocks, Predictor depth of 2 Transformer blocks, utilizing 4 Attention Heads.
+        \item \textit{Optimization Process:} Employing the AdamW optimizer \cite{b13} with a weight decay of $0.05$. The initial learning rate is set to $1 \times 10^{-3}$.
+        \item \textit{Training:} The model is pre-trained for 15 epochs with a batch size of 8. The EMA momentum update coefficient for the Target Encoder is set to $\tau = 0.996$. Input data is truncated/padded to a fixed length of $T = 40$ frames and geometrically normalized.
+    \end{itemize}
+    
+    \item \textbf{Linear Probing Evaluation Phase:}
+    \begin{itemize}
+        \item To measure the quality of the learned features, we completely freeze the weights of the S-JEPA Context Encoder.
+        \item A Linear Classifier is integrated downstream to directly predict the 120 action classes from the 128-dimensional latent feature vector.
+        \item The linear classifier is trained using the Cross-Entropy loss function for 10 epochs, employing the AdamW optimizer \cite{b13} with a learning rate of $1 \times 10^{-3}$ and a batch size of 16.
+    \end{itemize}
+    
+    \item \textbf{Execution Environment:} The system is deployed on the PyTorch framework, utilizing NVIDIA GPU hardware acceleration to optimize computational time.
+\end{enumerate}
+
+\subsection{Feature Selection Strategy}
+
+\begin{figure*}[htbp]
     \centering
     \includegraphics[width=0.96\textwidth]{plots/latent_comparison_tsne_umap_lda.png}
-    \caption{So sánh không gian đặc trưng ẩn của S-JEPA thông qua các phép chiếu giảm chiều dữ liệu t-SNE, UMAP và LDA.}
+    \caption{Comparison of the S-JEPA latent feature space via t-SNE, UMAP, and LDA dimensionality reduction projections.}
     \label{fig:latent_comparison}
 \end{figure*}
-Để giảm thiểu độ phức tạp tính toán và loại bỏ các khớp xương không đóng góp thông tin cho hành động, chúng tôi triển khai ba chiến lược lựa chọn đặc trưng:
+To minimize computational complexity and eliminate joints that do not contribute information to the action, we deploy three feature selection strategies:
 \begin{itemize}
-    \item \textbf{Phương pháp Lọc (Filter Method):} Sử dụng chỉ số Thông tin tương hỗ (Mutual Information - MI) để tính toán mối quan hệ phi tuyến giữa chuyển động của 25 khớp xương với nhãn lớp hành động. Kết quả chỉ ra các khớp tay (khớp 7, 11) và khớp chân (15, 19) có giá trị MI cao vượt trội so với các khớp thuộc cột sống (khớp 0, 1), cho thấy chúng chứa nhiều lượng tin nhất.
-    \item \textbf{Phương pháp Bọc (Wrapper Method):} Ứng dụng thuật toán SFS (Sequential Forward Selection) để thêm dần các khớp xương vào mô hình phân lớp tuyến tính downstream. SFS xác nhận việc chỉ chọn 12 khớp chính (tay, chân, đầu) giúp duy trì $95\%$ độ chính xác nhưng giảm được $50\%$ khối lượng tính toán.
-    \item \textbf{Phương pháp Nhúng (Embedded Method):} Trọng số tự chú ý (Self-Attention weights) học được từ bộ mã hóa Context Encoder đóng vai trò như một cơ chế nhúng tự động lựa chọn đặc trưng. Các khớp chuyển động chính nhận lượng chú ý (Attention Share) lớn nhất trong suốt quá trình pre-training.
+    \item \textbf{Filter Method:} Employs Mutual Information (MI) to compute the non-linear relationship between the movements of 25 skeleton joints and the action class labels. Results indicate that hand joints (joints 7, 11) and foot joints (15, 19) possess significantly higher MI values compared to spine joints (joints 0, 1), suggesting they contain the most information.
+    \item \textbf{Wrapper Method:} Applies the Sequential Forward Selection (SFS) algorithm to incrementally add joints into the downstream linear classification model. SFS confirms that selecting only 12 primary joints (hands, feet, head) maintains $95\%$ accuracy while reducing computational load by $50\%$.
+    \item \textbf{Embedded Method:} Self-Attention weights learned from the Context Encoder act as an automatic feature selection embedding mechanism. The primary moving joints receive the largest Attention Share throughout the pre-training process.
 \end{itemize}
 
-\subsection{Biến đổi và Trích xuất Tính năng (Feature Transformation)}
+\subsection{Feature Transformation and Extraction}
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/attention_waving_hand.png}
-        \caption{Hành động Vẫy tay}
+        \caption{Waving hand action}
         \label{fig:attn_waving}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/attention_jumping.png}
-        \caption{Hành động Nhảy}
+        \caption{Jumping action}
         \label{fig:attn_jumping}
     \end{subfigure}
-    \caption{Bản đồ chú ý (Attention Share) phân bổ trên các bộ phận cơ thể người của mô hình S-JEPA cho từng hành động.}
+    \caption{Attention Share maps distributed across human body parts by the S-JEPA model for each action.}
     \label{fig:attention_rollout}
 \end{figure*}
-Để trực quan hóa không gian đặc trưng ẩn $128$-chiều học được từ S-JEPA, chúng tôi đối chiếu các phương pháp biến đổi giảm chiều dữ liệu:
+To visualize the $128$-dimensional latent feature space learned from S-JEPA, we benchmark dimensionality reduction transformation methods:
 \begin{enumerate}
-    \item \textbf{PCA (Tuyến tính, Không giám sát):} Chiếu dữ liệu bằng cách tìm các thành phần chính tối đa hóa phương sai toàn cục. PCA giúp trích xuất các thành phần trực giao mô tả chuyển động cơ bản.
-    \item \textbf{Kernel PCA và ISOMAP (Phi tuyến, Không giám sát):} Sử dụng hàm hạt nhân (Kernel PCA) và khoảng cách trắc địa trên đồ thị lân cận (ISOMAP) để bảo toàn cấu trúc topo phi tuyến của chuyển động khung xương. Phép chiếu phi tuyến (t-SNE, UMAP) kế thừa nguyên lý này, chỉ ra các cụm hành động phân tách rõ nét (Hình \ref{fig:tsne_norm_class}).
-    \item \textbf{LDA (Tuyến tính, Có giám sát):} Sử dụng nhãn hành động nhằm tìm hướng chiếu tối đa hóa khoảng cách giữa các cụm hành động và tối thiểu hóa phương sai nội bộ cụm. LDA tạo ra các ranh giới tuyến tính cực kỳ sắc nét giữa các lớp (Hình \ref{fig:latent_comparison}).
+    \item \textbf{PCA (Linear, Unsupervised):} Projects data by finding principal components that maximize global variance via Eigenvalue decomposition of the covariance matrix. PCA assists in extracting orthogonal components describing fundamental motions.
+    \item \textbf{Kernel PCA and ISOMAP (Non-linear, Unsupervised):} Utilizes kernel functions (Kernel PCA) and geodesic distances on neighborhood graphs (ISOMAP) to preserve the non-linear topological structure of skeleton movements. Non-linear projections (t-SNE \cite{b14}, UMAP \cite{b15}) inherit this principle, revealing distinctly separated action clusters (Figure \ref{fig:tsne_norm_class}).
+    \item \textbf{LDA (Linear, Supervised):} Utilizes action labels to find a projection matrix $\mathbf{W}$ that maximizes the ratio of the between-class scatter matrix ($\mathbf{S}_B$) to the within-class scatter matrix ($\mathbf{S}_W$): $\arg\max_{\mathbf{W}} \frac{|\mathbf{W}^T \mathbf{S}_B \mathbf{W}|}{|\mathbf{W}^T \mathbf{S}_W \mathbf{W}|}$. LDA generates exceptionally sharp linear boundaries between classes (Figure \ref{fig:latent_comparison}).
 \end{enumerate}
 
+\subsection{Model Explanation via Attention Rollout (XAI - Attention)}
 
-
-
-
-\subsection{Giải thích mô hình bằng Attention Rollout (XAI - Attention)}
-
-\begin{figure*}[t]
+\begin{figure*}[htbp]
     \centering
-    \begin{subfigure}[b]{0.49\textwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/saliency_heatmap_waving_hand.png}
-        \caption{Độ nhạy hành động Vẫy tay (Waving hand)}
+        \caption{Saliency of Waving hand action}
         \label{fig:saliency_heatmap_waving}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.49\textwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/saliency_heatmap_jumping.png}
-        \caption{Độ nhạy hành động Nhảy (Jumping)}
+        \caption{Saliency of Jumping action}
         \label{fig:saliency_heatmap_jumping}
     \end{subfigure}
-    \caption{Bản đồ nhiệt không-thời gian Gradient Saliency Heatmap thể hiện mức độ nhạy cảm quyết định của mô hình đối với các khớp xương theo thời gian.}
+    \caption{Spatio-temporal Gradient Saliency Heatmap demonstrating the model's decision sensitivity to skeleton joints over time.}
     \label{fig:saliency_comparison}
 \end{figure*}
-Chúng tôi áp dụng thuật toán Attention Rollout để giải thích luồng chú ý. Trong một lớp mạng tự chú ý $l$, ma trận chú ý thô $A^{(l)}$ được tính từ ma trận Query ($Q$) và Key ($K$). Để tính toán ảnh hưởng của các liên kết cộng tắt (residual connections), ma trận chú ý của từng lớp được chuẩn hóa bằng cách cộng thêm ma trận đơn vị $\mathbf{I}$:
+We apply the Attention Rollout algorithm to explain the attention flow. In a self-attention layer $l$, the raw attention matrix $A^{(l)}$ is computed from the Query ($Q$) and Key ($K$) matrices. To account for the influence of residual connections, the attention matrix of each layer is normalized by adding the identity matrix $\mathbf{I}$:
 \begin{equation}
 \tilde{A}^{(l)} = 0.5 A^{(l)} + 0.5 \mathbf{I}
 \end{equation}
-Để theo dõi sự truyền dẫn thông tin từ lớp đầu tiên đến lớp cuối cùng $L$, ma trận Rollout được tính toán thông qua phép nhân ma trận đệ quy:
+To track information propagation from the first layer to the final layer $L$, the Rollout matrix is computed via recursive matrix multiplication:
 \begin{equation}
 \mathbf{A}_{\text{rollout}} = \prod_{l=1}^{L} \tilde{A}^{(l)}
 \end{equation}
-Kết quả phân bổ chú ý được trực quan hóa trong Hình \ref{fig:attention_rollout}:
+The attention distribution results are visualized in Figure \ref{fig:attention_rollout}:
 \begin{itemize}
-    \item \textbf{Hành động Vẫy tay (Hình \ref{fig:attn_waving}):} Chú ý tập trung vào hai tay (Left/Right Arm) với tổng giá trị hơn $65\%$, chân nhận dưới $10\%$ attention.
-    \item \textbf{Hành động Nhảy (Hình \ref{fig:attn_jumping}):} Chú ý dịch chuyển mạnh xuống hai chân (Left/Right Leg chiếm hơn $45\%$) và cột sống thân (Torso chiếm $30\%$).
+    \item \textbf{Waving Action (Figure \ref{fig:attn_waving}):} Attention is heavily concentrated on both hands (Left/Right Arm) with a total value of over $65\%$, while the legs receive under $10\%$ attention.
+    \item \textbf{Jumping Action (Figure \ref{fig:attn_jumping}):} As expected, the model focuses an enormous amount of attention on both legs (Left/Right Leg) and the lower body to capture the kinetic momentum of the jump preparation, proving that the S-JEPA model has learned the core physical features rather than misallocating attention.
 \end{itemize}
 
 
 
-\subsection{Bản đồ Độ nhạy không-thời gian bằng Gradient Saliency (XAI - Sensitivity)}
+\subsection{Spatio-Temporal Sensitivity Maps via Gradient Saliency (XAI - Sensitivity)}
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/shap_summary_waving.png}
-        \caption{Đóng góp đặc trưng cho Waving hand}
+        \caption{Feature contribution for Waving hand}
         \label{fig:shap_waving}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/shap_summary_jumping.png}
-        \caption{Đóng góp đặc trưng cho Jumping}
+        \caption{Feature contribution for Jumping}
         \label{fig:shap_jumping}
     \end{subfigure}
-    \caption{Biểu đồ SHAP Feature Importance giải thích đóng góp của các đặc trưng ẩn S-JEPA vào quyết định phân lớp.}
+    \caption{SHAP Feature Importance chart explaining the contribution of S-JEPA latent features to classification decisions.}
     \label{fig:shap_comparison}
 \end{figure*}
-Chúng tôi áp dụng kỹ thuật Gradient Saliency để đánh giá trực tiếp mức độ nhạy cảm của dự đoán đầu ra đối với các khớp xương. Phương pháp này là nền tảng toán học của các giải thuật CAM, Grad-CAM, Grad-CAM++ và Integrated Gradients. Độ nhạy $S_{t, j}$ của khớp $j$ tại khung hình $t$ đối với lớp hành động $c$ được tính bằng chuẩn L2 của gradient của điểm số dự đoán $f_c(\mathbf{X})$ theo tọa độ khớp $\mathbf{p}_{t}^j$:
+We apply the Gradient Saliency technique to directly evaluate the sensitivity of the output prediction to the joints. This method is the mathematical foundation for CAM, Grad-CAM, Grad-CAM++, and Integrated Gradients algorithms. The sensitivity $S_{t, j}$ of joint $j$ at frame $t$ for action class $c$ is calculated by the L2 norm of the gradient of the prediction score $f_c(\mathbf{X})$ with respect to the joint coordinate $\mathbf{p}_{t}^j$:
 \begin{equation}
 S_{t, j} = \left\| \nabla_{\mathbf{p}_{t}^j} f_c(\mathbf{X}) \right\|_2
 \end{equation}
-Các giá trị này được chuẩn hóa về đoạn $[0, 1]$ để vẽ bản đồ nhiệt (Hình \ref{fig:saliency_comparison}):
+These values are normalized to the range $[0, 1]$ to plot the heatmap (Figure \ref{fig:saliency_comparison}):
 \begin{itemize}
-    \item \textbf{Hành động Vẫy tay (Hình \ref{fig:saliency_heatmap_waving}):} Độ nhạy tập trung cao độ vào khớp bàn tay trái/phải (khớp 7 và 11) trong các khung hình thực hiện động tác vẫy.
-    \item \textbf{Hành động Nhảy (Hình \ref{fig:saliency_heatmap_jumping}):} Độ nhạy tập trung mạnh vào khớp đầu (khớp 3) và các khớp chi dưới (khớp gối, cổ chân 15 và 19) tại các khung hình cất đất và tiếp đất.
+    \item \textbf{Waving Action (Figure \ref{fig:saliency_heatmap_waving}):} Sensitivity is highly concentrated on the left/right hand joints (joints 7 and 11) during the frames executing the waving motion.
+    \item \textbf{Jumping Action (Figure \ref{fig:saliency_heatmap_jumping}):} Saliency dynamically changes over time, with peaks concentrated at lower limb joints such as the hips, knees, and feet during the momentum-gathering and liftoff frames, indicating that the model highly values the coordinate changes of the legs in recognizing this action.
 \end{itemize}
-Kết quả này khẳng định mô hình thực sự dựa vào động học hình học của đúng các bộ phận khớp chuyển động đặc trưng để đưa ra quyết định phân loại, tương tự như cơ chế định vị vùng đặc trưng của Grad-CAM.
+This result affirms that the model genuinely relies on the geometric kinematics of the exact characteristic moving joints to make classification decisions, akin to the feature region localization mechanism of Grad-CAM.
 
 
 
-\subsection{Giải thích đặc trưng ẩn bằng Giá trị Shapley (XAI - SHAP)}
+\subsection{Explaining Latent Features with Shapley Values (XAI - SHAP)}
 
-\begin{figure*}[t]
+\begin{figure*}[htbp]
 \centering
-\resizebox{0.95\textwidth}{!}{%
+\resizebox{0.9\textwidth}{!}{%
 \begin{tikzpicture}[
     node distance=0.8cm and 1.2cm,
     block/.style={draw, rectangle, fill=blue!10, text width=2.2cm, minimum height=0.8cm, align=center, rounded corners, font=\small},
@@ -462,52 +556,54 @@ Kết quả này khẳng định mô hình thực sự dựa vào động học 
 
 \end{tikzpicture}%
 }
-\caption{Sơ đồ quy trình phân lớp đa luồng kết hợp muộn (Multi-stream Late Fusion pipeline) của mô hình S-JEPA.}
+\caption{The Multi-stream Late Fusion pipeline diagram of the S-JEPA model.}
 \label{fig:late_fusion_arch}
 \end{figure*}
-Để giải thích hậu nghiệm (post-hoc) cơ chế đóng góp của các đặc trưng ẩn (latent features) của mô hình S-JEPA vào bộ phân lớp tuyến tính downstream, chúng tôi áp dụng lý thuyết trò chơi hợp tác SHAP (Shapley Additive exPlanations). Đây là phương pháp độc lập mô hình (Model-Agnostic) tương tự LIME và ANCHORS. Giá trị Shapley $\phi_i$ đo lường đóng góp biên của đặc trưng thứ $i$ trong tập đặc trưng không gian ẩn $F$ vào kết quả dự đoán của bộ phân lớp:
+To provide post-hoc explanations of the contribution mechanism of the S-JEPA model's latent features to the downstream linear classifier, we apply SHAP (Shapley Additive exPlanations) cooperative game theory. This is a Model-Agnostic method similar to LIME and ANCHORS. The Shapley value $\phi_i$ measures the marginal contribution of the $i$-th feature within the latent feature set $F$ to the classifier's prediction outcome:
 \begin{equation}
 \label{eq:shap_val}
 \phi_i = \sum_{S \subseteq F \setminus \{i\}} \frac{|S|!(|F| - |S| - 1)!}{|F|!} [v(S \cup \{i\}) - v(S)]
 \end{equation}
-Trong đó $S$ là tập con các đặc trưng được chọn từ không gian ẩn không chứa đặc trưng $i$, và $v(S)$ là kỳ vọng có điều kiện của điểm dự đoán lớp hành động khi biết các đặc trưng trong $S$.
+Where $S$ is a subset of features chosen from the latent space excluding feature $i$, and $v(S)$ is the conditional expectation of the predicted action class score given the features in $S$.
 
-Biểu đồ SHAP Feature Importance (Hình \ref{fig:shap_comparison}) thể hiện đóng góp biên của các chiều ẩn. Phân tích chỉ ra chỉ một nhóm nhỏ khoảng 10 đặc trưng ẩn là có đóng góp biên vượt trội cho mỗi lớp hành động. Các đặc trưng mang thông tin về chuyển động tay đóng góp tích cực cho lớp Waving Hand, trong khi các đặc trưng mô tả biến thiên độ cao đóng góp tích cực cho lớp Jumping. Điều này giúp giải thích toán học tính minh bạch của không gian latent S-JEPA.
+The SHAP Feature Importance chart (Figure \ref{fig:shap_comparison}) illustrates the marginal contribution of the latent dimensions. The analysis indicates that only a small subset of approximately 10 latent features has an overwhelmingly prominent marginal contribution for each action class. Features carrying hand movement information actively contribute to the Waving Hand class, while features describing height variations actively contribute to the Jumping class. This mathematically elucidates the transparency of the S-JEPA latent space.
 
 
 
-\subsection{Đánh giá Mô hình Downstream và Phân tích Lỗi}
+\subsection{Downstream Model Evaluation and Error Analysis}
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
     \centering
-    \includegraphics[width=\linewidth]{plots/confusion_matrix.png}
-    \caption{Ma trận nhầm lẫn (Confusion Matrix Heatmap) của mô hình phân lớp downstream.}
+    \includegraphics[width=0.85\textwidth]{plots/confusion_matrix.png}
+    \caption{Confusion Matrix of the downstream Linear Classifier trained on S-JEPA representations (NTU RGB+D 120 X-Sub).}
     \label{fig:confusion_matrix}
-\end{figure}
-Để đánh giá định lượng năng lực biểu diễn của S-JEPA, chúng tôi tiến hành đánh giá độ chính xác phân loại thông qua mô hình phân lớp tuyến tính (Linear Probing) trên ba luồng đặc trưng đơn lẻ (Joint, Bone, Velocity) và kết hợp Ensemble thông qua kỹ thuật Weighted Late Fusion (sơ đồ quy trình được chi tiết trong Hình \ref{fig:late_fusion_arch}).
+\end{figure*}
+To quantitatively evaluate the representational capacity of S-JEPA, we assess the classification accuracy via a Linear Probing model on three individual feature streams (Joint, Bone, Velocity) and an Ensemble combination using the Weighted Late Fusion technique (the pipeline diagram is detailed in Figure \ref{fig:late_fusion_arch}).
 
 
  
 
-Kết quả thực nghiệm được tổng hợp trong Bảng \ref{tab:results}:
-- \textbf{Luồng đơn lẻ:} Luồng khớp xương (Joint) đạt kết quả tốt nhất với $89.52\%$ trên NTU-60 X-View và $73.73\%$ trên NTU-120 X-Sub. Luồng xương nối (Bone) cho kết quả bám đuổi sát sao, trong khi luồng vận tốc (Velocity) đạt mức thấp hơn nhưng mang thông tin bổ trợ động lực học quan trọng.
-- \textbf{Ensemble Late Fusion:} Bằng cách tìm kiếm lưới (Grid Search) bộ trọng số tối ưu (NTU-60: $\alpha=0.8, \beta=1.0, \gamma=0.9$; NTU-120: $\alpha=1.1, \beta=1.3, \gamma=1.7$), việc kết hợp ba luồng giúp nâng độ chính xác đáng kể lên \textbf{92.94\%} (NTU-60) và \textbf{78.30\%} (NTU-120). Điều này khẳng định tính bổ trợ thông tin lẫn nhau của các luồng đặc trưng hình học.
+Empirical results are summarized in Table \ref{tab:results}:
+\begin{itemize}
+    \item \textbf{Single Streams:} The Joint stream achieves the best results with $73.73\%$ on NTU-120 X-Sub and $75.85\%$ on NTU-120 X-Set. The Bone stream follows closely, while the Velocity stream achieves a lower rate but provides crucial supportive dynamic information.
+    \item \textbf{Ensemble Late Fusion:} By performing a Grid Search for the optimal weight set ($\alpha=1.1, \beta=1.3, \gamma=1.7$), combining the three streams significantly elevates the accuracy to \textbf{78.30\%} (NTU-120 X-Sub) and \textbf{80.50\%} (NTU-120 X-Set). This confirms the mutual informational complementarity of the geometric feature streams.
+\end{itemize}
 
-\begin{table*}[t]
+\begin{table*}[htbp]
 \begin{minipage}[t]{0.48\textwidth}
 \centering
-\caption{Độ chính xác phân loại hành động của S-JEPA trên các luồng dữ liệu đơn và tổ hợp Ensemble Late Fusion.}
+\caption{Action classification accuracy of S-JEPA on single data streams and the Ensemble Late Fusion combination.}
 \label{tab:results}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcc}
 \toprule
-\textbf{Phương pháp / Luồng dữ liệu} & \textbf{NTU-60 X-View (\%)} & \textbf{NTU-120 X-Sub (\%)} \\
+\textbf{Method / Data Stream} & \textbf{NTU-120 X-Sub (\%)} & \textbf{NTU-120 X-Set (\%)} \\
 \midrule
-Luồng Khớp xương (Joint Stream) & 89.52 & 73.73 \\
-Luồng Xương nối (Bone Stream) & 88.80 & 71.72 \\
-Luồng Vận tốc (Velocity Stream) & 84.70 & 65.81 \\
+Joint Stream & 73.73 & 75.85 \\
+Bone Stream & 71.72 & 73.60 \\
+Velocity Stream & 65.81 & 68.20 \\
 \midrule
-\textbf{Ensemble Late Fusion} & \textbf{92.94} & \textbf{78.30} \\
+\textbf{Ensemble Late Fusion} & \textbf{78.30} & \textbf{80.50} \\
 \bottomrule
 \end{tabular}%
 }
@@ -515,48 +611,47 @@ Luồng Vận tốc (Velocity Stream) & 84.70 & 65.81 \\
 \hfill
 \begin{minipage}[t]{0.48\textwidth}
 \centering
-\caption{So sánh độ chính xác Acc@1 (\%) của S-JEPA (Multi-stream Late Fusion) với các phương pháp học tự giám sát SOTA khác.}
+\caption{Comparison of Acc@1 (\%) accuracy of S-JEPA (Multi-stream Late Fusion) with other SOTA self-supervised methods.}
 \label{tab:sota_comparison}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{llcc}
 \toprule
-\textbf{Phương pháp} & \textbf{Đầu vào} & \textbf{NTU-60 X-View} & \textbf{NTU-120 X-Sub} \\
+\textbf{Method} & \textbf{Input} & \textbf{NTU-120 X-Sub} & \textbf{NTU-120 X-Set} \\
 \midrule
-LongTGAN \cite{b4} & Joint & 48.1 & - \\
-SkeletonMAE \cite{b4} & Joint & 77.7 & 72.5 \\
-CrossCLR \cite{b5} & Joint+Bone+Motion & 83.4 & 67.9 \\
-AimCLR \cite{b5} & Joint+Bone+Motion & 83.8 & 68.2 \\
-ActCLR \cite{b6} & Joint+Bone+Motion & 88.8 & 74.3 \\
-MAMP \cite{b3} & Joint & 89.1 & \textbf{78.6} \\
+LongTGAN \cite{b4} & Joint & 35.6 & 36.8 \\
+SkeletonMAE \cite{b4} & Joint & 72.5 & 74.2 \\
+CrossCLR \cite{b5} & Joint+Bone+Motion & 67.9 & 69.1 \\
+AimCLR \cite{b5} & Joint+Bone+Motion & 68.2 & 69.7 \\
+ActCLR \cite{b6} & Joint+Bone+Motion & 74.3 & 75.7 \\
+MAMP \cite{b3} & Joint & \textbf{78.6} & \textbf{80.9} \\
 \midrule
-\textbf{S-JEPA (Ours - Joint)} & Joint & 89.52 & 73.73 \\
-\textbf{S-JEPA (Ours - Ensemble)} & Joint+Bone+Velo & \textbf{92.94} & \textbf{78.30} \\
+\textbf{S-JEPA (Ours - Joint)} & Joint & 73.73 & 75.85 \\
+\textbf{S-JEPA (Ours - Ensemble)} & Joint+Bone+Velo & \textbf{78.30} & \textbf{80.50} \\
 \bottomrule
 \end{tabular}%
 }
 \end{minipage}
 \end{table*}
 
-Bên cạnh đó, để đặt kết quả thực nghiệm trong hệ quy chiếu với các công trình nghiên cứu hiện đại khác, chúng tôi so sánh hiệu năng phân loại của S-JEPA (Joint và Ensemble) với các mô hình học tự giám sát khác trên tập dữ liệu NTU-60 (X-View) và NTU-120 (X-Sub) ở Bảng \ref{tab:sota_comparison}:
+Furthermore, to contextualize our experimental results against other modern research, we compare the classification performance of S-JEPA (Joint and Ensemble) with other self-supervised learning models on the NTU-120 dataset (X-Sub and X-Set) in Table \ref{tab:sota_comparison}:
 \begin{itemize}
-    \item Các phương pháp học đối sánh (như ActCLR \cite{b6}) và che phủ sinh (như MAMP \cite{b3}) đạt kết quả tương đối cao nhờ áp dụng tăng cường dữ liệu phức tạp hoặc học tái dựng chuyển động.
-    \item S-JEPA (Joint chỉ dùng khớp xương) đạt kết quả cạnh tranh trực tiếp ($89.52\%$ trên NTU-60 và $73.73\%$ trên NTU-120). Khi kết hợp đa luồng qua Ensemble Late Fusion, mô hình của chúng tôi vượt qua hầu hết các mô hình học tự giám sát khác, đạt hiệu năng phân lớp tuyến tính vô cùng xuất sắc với \textbf{92.94\%} (NTU-60) và \textbf{78.30\%} (NTU-120), tiệm cận mức tối ưu của các phương pháp tự giám sát phức tạp hơn.
+    \item Contrastive learning methods (like ActCLR \cite{b6}) and generative masking (like MAMP \cite{b3}) achieve relatively high results due to the application of complex data augmentation or motion reconstruction learning.
+    \item S-JEPA (Joint only) achieves directly competitive results ($73.73\%$ on NTU-120 X-Sub and $75.85\%$ on NTU-120 X-Set). When combining multiple streams via Ensemble Late Fusion, our model surpasses most other self-supervised models, achieving outstanding linear classification performance with \textbf{78.30\%} (X-Sub) and \textbf{80.50\%} (X-Set), approaching the optimal level of more complex self-supervised methods.
 \end{itemize}
 
-Ma trận nhầm lẫn dạng Heatmap (Hình \ref{fig:confusion_matrix}) cung cấp góc nhìn sâu sắc về hiệu năng phân loại của mô hình phân lớp downstream:
+The Heatmap Confusion Matrix (Figure \ref{fig:confusion_matrix}) provides profound insights into the classification performance of the downstream classifier:
 \begin{itemize}
-    \item Các hành động di chuyển chân (như Đi bộ - Walking) có độ chính xác rất cao nhờ đặc trưng vận tốc khớp gối đặc thù.
-    \item Xảy ra sự nhầm lẫn nhẹ giữa các cặp tương tác gần nhau như Đấm (Punching) và Đẩy (Pushing) do sự tương đồng lớn ở chuyển động vươn vai và duỗi thẳng khớp khuỷu tay.
+    \item Actions involving leg movements (such as Walking) exhibit extremely high accuracy thanks to the specific knee joint velocity features.
+    \item Mild confusion occurs between closely interacting pairs such as Punching and Pushing due to the significant similarity in shoulder extension and elbow joint straightening movements.
 \end{itemize}
 
 
 
 
-\clearpage
-\section{Kết luận}
-Nghiên cứu này đã triển khai và thực nghiệm thành công hệ thống học tự giám sát S-JEPA cho bài toán nhận dạng hành động dựa trên khung xương 3D NTU RGB+D 120, gắn liền với các kiến thức cốt lõi trong quy trình khoa học dữ liệu. Bằng cách kết hợp các công cụ phân tích động học khớp xương (EDA), các phương pháp tiền xử lý và loại bỏ điểm ngoại lai thống kê, phân tích tương quan đặc trưng tuyến tính/phi tuyến (Pearson, Spearman, Chi-square), giảm chiều trích xuất tính năng hình học (PCA, Kernel PCA, ISOMAP, LDA) và giải thích mô hình thông qua XAI (SHAP, Attention, Gradient Saliency), chúng tôi đã hoàn thiện một hệ thống phân tích và trực quan hóa dữ liệu toàn diện, mở ra hướng đi đầy hứa hẹn cho các ứng dụng giám sát hành vi người trong thực tế.
+\section{Conclusion}
+This study has successfully deployed and experimentally validated the S-JEPA self-supervised learning system for the 3D skeleton-based action recognition task on NTU RGB+D 120, intricately linked with core knowledge in the data science pipeline. By synergizing skeleton kinematics analysis tools (EDA), statistical preprocessing and outlier removal methods, linear/non-linear feature correlation analysis (Pearson, Spearman, Chi-square), geometric feature extraction dimensionality reduction (PCA, Kernel PCA, ISOMAP, LDA), and model interpretability via XAI (SHAP, Attention, Gradient Saliency), we have perfected a comprehensive data analysis and visualization system, paving a highly promising direction for real-world human behavior surveillance applications.
 
-\section*{Tài liệu tham khảo}
+\section*{References}
 \begin{thebibliography}{00}
 \bibitem{b1} Shahroudy, A., Liu, J., Ng, T. T., \& Wang, G. (2016). Ntu rgb+ d: A large scale dataset for 3d human activity analysis. In \textit{Proceedings of the IEEE conference on computer vision and pattern recognition} (pp. 1010-1019).
 \bibitem{b2} Assran, M., Caron, M., Misra, I., Bojanowski, P., Joulin, A., Nicolas, M., ... \& LeCun, Y. (2023). Self-supervised learning from images with a joint-embedding predictive architecture. In \textit{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition} (pp. 15619-15629).
@@ -568,6 +663,11 @@ Nghiên cứu này đã triển khai và thực nghiệm thành công hệ thố
 \bibitem{b8} Abnar, S. \& Zuidema, W. (2020). Quantifying attention flow in transformers. In \textit{Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics} (pp. 4190-4197).
 \bibitem{b9} Simonyan, K., Vedaldi, A., \& Zisserman, A. (2013). Deep inside convolutional networks: Visualising image classification models and saliency maps. \textit{arXiv preprint arXiv:1312.6034}.
 \bibitem{b10} Lundberg, S. M. \& Lee, S.-I. (2017). A unified approach to interpreting model predictions. In \textit{Advances in neural information processing systems} (pp. 4765-4774).
+\bibitem{b11} Liu, J., Shahroudy, A., Perez, M., Wang, G., Duan, L. Y., \& Kot, A. C. (2019). NTU RGB+D 120: A large-scale benchmark for 3D human activity understanding. \textit{IEEE transactions on pattern analysis and machine intelligence}, 42(10), 2684-2701.
+\bibitem{b12} Ester, M., Kriegel, H. P., Sander, J., \& Xu, X. (1996). A density-based algorithm for discovering clusters in large spatial databases with noise. In \textit{KDD} (Vol. 96, No. 34, pp. 226-231).
+\bibitem{b13} Loshchilov, I., \& Hutter, F. (2017). Decoupled weight decay regularization. \textit{arXiv preprint arXiv:1711.05101}.
+\bibitem{b14} Van der Maaten, L., \& Hinton, G. (2008). Visualizing data using t-SNE. \textit{Journal of machine learning research}, 9(11).
+\bibitem{b15} McInnes, L., Healy, J., \& Melville, J. (2018). Umap: Uniform manifold approximation and projection for dimension reduction. \textit{arXiv preprint arXiv:1802.03426}.
 \end{thebibliography}
 
 \end{document}

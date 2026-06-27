@@ -140,7 +140,11 @@ if __name__ == "__main__":
         create_mock_dataset(data_dir, num_samples=10)
         skeleton_files = glob.glob(os.path.join(data_dir, "*.skeleton"))
         
+    # Find a specific jumping action sample (A027) if available
+    jumping_files = [f for f in skeleton_files if "A027" in f]
+    selected_file = jumping_files[0] if jumping_files else skeleton_files[0]
+    
     # Generate static keyframe plots for normalized coordinates
-    create_static_3d_skeleton(skeleton_files[0], output_dir, normalize=True)
+    create_static_3d_skeleton(selected_file, output_dir, normalize=True)
     # Generate static keyframe plots for raw coordinates
-    create_static_3d_skeleton(skeleton_files[0], output_dir, normalize=False)
+    create_static_3d_skeleton(selected_file, output_dir, normalize=False)

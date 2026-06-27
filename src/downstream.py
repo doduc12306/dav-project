@@ -194,14 +194,10 @@ def train_classifier(data_dir, pretrain_path, epochs=15, batch_size=8, lr=1e-3, 
     cm = confusion_matrix(all_targets, all_preds, labels=unique_classes)
     plt.figure(figsize=(10, 8.5))
     if len(unique_classes) > 20:
-        # Use class IDs instead of long text names to prevent text overlaps
-        sns.heatmap(cm, annot=False, cmap='Blues', 
-                    xticklabels=[c+1 for c in unique_classes], 
-                    yticklabels=[c+1 for c in unique_classes])
-        plt.xticks(rotation=90, fontsize=6)
-        plt.yticks(rotation=0, fontsize=6)
-        plt.xlabel("Predicted Class ID", fontsize=11, labelpad=10)
-        plt.ylabel("True Class ID", fontsize=11, labelpad=10)
+        # Use abstract heatmap without tick labels for large number of classes
+        sns.heatmap(cm, annot=False, cmap='Blues', xticklabels=False, yticklabels=False)
+        plt.xlabel("Predicted Class", fontsize=11, labelpad=10)
+        plt.ylabel("True Class", fontsize=11, labelpad=10)
     else:
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
         plt.xticks(rotation=45, ha='right', fontsize=9)
