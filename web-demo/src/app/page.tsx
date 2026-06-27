@@ -240,11 +240,11 @@ export default function DemoPage() {
                   margin: { l: 0, r: 0, b: 0, t: 0 },
                   paper_bgcolor: "transparent",
                   scene: {
-                    aspectmode: "data",
+                    aspectmode: "cube",
                     camera: { eye: { x: 1.5, y: -1.5, z: 0.5 } },
-                    xaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "X", tickfont: {size: 10} },
-                    yaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Depth", tickfont: {size: 10} },
-                    zaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Height", tickfont: {size: 10} },
+                    xaxis: { range: [-1, 1], showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "X", tickfont: {size: 10} },
+                    yaxis: { range: [-1, 1], showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Depth", tickfont: {size: 10} },
+                    zaxis: { range: [-1, 1.5], showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Height", tickfont: {size: 10} },
                   }
                 }}
                 config={{ displayModeBar: false, responsive: true }}

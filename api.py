@@ -16,7 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATA_DIR = "data/ntu_skeletons"
+DATA_DIR = "/media/ibmelab/ibme31/sjepa/DATA/nturgbd_skeletons_s001_to_s017/nturgb+d_skeletons"
 
 # Action classes (simplified mock map for demo based on NTU classes)
 ACTION_NAMES = {
@@ -34,7 +34,7 @@ def list_skeletons():
     if not os.path.exists(DATA_DIR):
         return {"files": []}
     files = [f for f in os.listdir(DATA_DIR) if f.endswith(".skeleton")]
-    return {"files": sorted(files)}
+    return {"files": sorted(files)[:200]}
 
 @app.get("/api/predict/{filename}")
 def predict_action(filename: str):
