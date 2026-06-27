@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { Database, FileText, BarChart2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Database, FileText, BarChart2, CheckCircle2, AlertCircle, Play, Pause } from "lucide-react";
 import dynamic from "next/dynamic";
 
 // Dynamically import Plotly
@@ -16,6 +16,12 @@ export default function DemoPage() {
   const [jointsData, setJointsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Animation state
+  const [skeletonFrames, setSkeletonFrames] = useState<any[]>([]);
+  const [connections, setConnections] = useState<any[]>([]);
+  const [currentFrame, setCurrentFrame] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     fetch("/api/skeletons")
@@ -43,7 +49,11 @@ export default function DemoPage() {
       })
       .then((data) => {
         setPrediction(data.prediction);
-        formatPlotData(data.skeleton, data.connections);
+        setSkeletonFrames(data.skeleton);
+        setConnections(data.connections);
+        setCurrentFrame(0);
+        setIsPlaying(true);
+        formatPlotData(data.skeleton[0], data.connections);
         setLoading(false);
       })
       .catch((err) => {
@@ -52,10 +62,28 @@ export default function DemoPage() {
       });
   }, [selectedFile]);
 
-  // Format Plotly data for Light Mode
-  const formatPlotData = (skeleton: any[], connections: any[]) => {
-    if (!skeleton || skeleton.length === 0) return;
-    const body1 = skeleton[0][0]; 
+  // Update plot when frame changes
+  useEffect(() => {
+    if (skeletonFrames.length > 0 && connections.length > 0) {
+      formatPlotData(skeletonFrames[currentFrame], connections);
+    }
+  }, [currentFrame, skeletonFrames, connections]);
+
+  // Playback loop
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying && skeletonFrames.length > 0) {
+      interval = setInterval(() => {
+        setCurrentFrame((prev) => (prev + 1) % skeletonFrames.length);
+      }, 50); // ~20fps
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, skeletonFrames.length]);
+
+  // Format Plotly data for Light Mode (single frame)
+  const formatPlotData = (frameData: any[], connections: any[]) => {
+    if (!frameData || frameData.length === 0) return;
+    const body1 = frameData[0]; 
     if (!body1) return;
 
     const x = body1.map((j: any[]) => j[0]);
@@ -228,6 +256,32 @@ export default function DemoPage() {
               </div>
             )}
           </div>
+
+          {/* Animation Controls */}
+          {skeletonFrames.length > 0 && !loading && (
+            <div className="border-t border-zinc-200 p-4 bg-zinc-50 flex items-center gap-4">
+              <button 
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 text-zinc-800 rounded-sm transition-colors"
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </button>
+              <input 
+                type="range" 
+                min="0" 
+                max={skeletonFrames.length - 1} 
+                value={currentFrame}
+                onChange={(e) => {
+                  setIsPlaying(false);
+                  setCurrentFrame(parseInt(e.target.value));
+                }}
+                className="flex-1 h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-zinc-800"
+              />
+              <div className="text-xs font-mono text-zinc-500 w-16 text-right">
+                {currentFrame + 1} / {skeletonFrames.length}
+              </div>
+            </div>
+          )}
         </section>
 
       </main>
