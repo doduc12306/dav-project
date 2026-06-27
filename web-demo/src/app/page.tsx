@@ -87,8 +87,8 @@ export default function DemoPage() {
     if (!body1) return;
 
     const x = body1.map((j: any[]) => j[0]);
-    const y = body1.map((j: any[]) => j[1]);
-    const z = body1.map((j: any[]) => j[2]);
+    const y = body1.map((j: any[]) => j[2]); // Z is depth in NTU, map to Y in Plotly
+    const z = body1.map((j: any[]) => -j[1]); // Y is height (downward) in NTU, map to -Z in Plotly
 
     const traces: any[] = [];
     
@@ -234,16 +234,17 @@ export default function DemoPage() {
             ) : jointsData.length > 0 ? (
                <Plot
                 data={jointsData}
+                revision={currentFrame}
                 layout={{
                   autosize: true,
                   margin: { l: 0, r: 0, b: 0, t: 0 },
                   paper_bgcolor: "transparent",
                   scene: {
                     aspectmode: "data",
-                    camera: { eye: { x: 1.2, y: 1.2, z: 0.8 } },
+                    camera: { eye: { x: 1.5, y: -1.5, z: 0.5 } },
                     xaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "X", tickfont: {size: 10} },
-                    yaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Y", tickfont: {size: 10} },
-                    zaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Z", tickfont: {size: 10} },
+                    yaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Depth", tickfont: {size: 10} },
+                    zaxis: { showbackground: false, showgrid: true, gridcolor: "#e4e4e7", zeroline: true, zerolinecolor: "#a1a1aa", title: "Height", tickfont: {size: 10} },
                   }
                 }}
                 config={{ displayModeBar: false, responsive: true }}
