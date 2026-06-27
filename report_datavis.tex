@@ -68,7 +68,7 @@ To overcome the "black box" barrier of deep neural networks, two main branches o
 \section{Data Science Pipeline and Exploratory Data Analysis (EDA)}
 \begin{figure}[htbp]
 \centering
-\resizebox{0.8\columnwidth}{!}{%
+\resizebox{0.98\columnwidth}{!}{%
 \begin{tikzpicture}[
     node distance=0.8cm and 1.0cm,
     step_node/.style={draw, rectangle, fill=blue!8, text width=2.5cm, minimum height=1.2cm, align=center, rounded corners, font=\small, draw=blue!40, thick},
@@ -124,14 +124,14 @@ We utilize visual charts to analyze the data structure:
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/action_distribution.png}
+        \includegraphics[width=0.98\linewidth]{plots/action_distribution.png}
         \caption{Action Distribution}
         \label{fig:action_dist}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/frame_distribution.png}
+        \includegraphics[width=0.98\linewidth]{plots/frame_distribution.png}
         \caption{Frame Count Distribution}
         \label{fig:frame_dist}
     \end{subfigure}
@@ -143,14 +143,14 @@ We utilize visual charts to analyze the data structure:
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/joint_dynamics_hand_waving.png}
+        \includegraphics[width=0.98\linewidth]{plots/joint_dynamics_hand_waving.png}
         \caption{Waving Action}
         \label{fig:dyn_waving}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/joint_dynamics_jump_up.png}
+        \includegraphics[width=0.98\linewidth]{plots/joint_dynamics_jump_up.png}
         \caption{Jumping Action}
         \label{fig:dyn_jumping}
     \end{subfigure}
@@ -202,14 +202,14 @@ Figure \ref{fig:skeleton_comparison} visualizes the comparison between the raw s
     \centering
     \begin{subfigure}[b]{0.98\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/S006C001P023R002A027_raw_3d.png}
+        \includegraphics[width=0.98\linewidth]{plots/S006C001P023R002A027_raw_3d.png}
         \caption{Raw skeleton coordinates tilted by the C001 camera angle.}
         \label{fig:skele_raw}
     \end{subfigure}
     \\ \vspace{0.3cm}
     \begin{subfigure}[b]{0.98\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/S006C001P023R002A027_normalized_3d.png}
+        \includegraphics[width=0.98\linewidth]{plots/S006C001P023R002A027_normalized_3d.png}
         \caption{Normalized coordinates, straightened and translated to the Spine Base.}
         \label{fig:skele_norm}
     \end{subfigure}
@@ -233,7 +233,7 @@ The self-supervised learning system S-JEPA is built upon three main neural netwo
 
 \begin{figure}[htbp]
 \centering
-\resizebox{0.8\columnwidth}{!}{%
+\resizebox{0.98\columnwidth}{!}{%
 \begin{tikzpicture}[
     node distance=1.5cm,
     block/.style={draw, rectangle, fill=blue!10, text width=2.4cm, minimum height=1cm, align=center, rounded corners, font=\small},
@@ -305,21 +305,21 @@ The self-supervised learning system S-JEPA is built upon three main neural netwo
     \centering
     \begin{subfigure}[b]{0.31\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/tsne_latent_space_raw_by_camera.png}
+        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_raw_by_camera.png}
         \caption{Raw latent space by Camera ID}
         \label{fig:tsne_raw_cam}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.31\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/tsne_latent_space_by_camera.png}
+        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_camera.png}
         \caption{Normalized latent space by Camera ID}
         \label{fig:tsne_norm_cam}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.31\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/tsne_latent_space_by_class.png}
+        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_class.png}
         \caption{Normalized latent space by Action Class}
         \label{fig:tsne_norm_class}
     \end{subfigure}
@@ -332,7 +332,7 @@ The model training and evaluation process is divided into two distinct phases: s
 
 \begin{figure}[htbp]
 \centering
-\resizebox{0.8\columnwidth}{!}{%
+\resizebox{0.98\columnwidth}{!}{%
 \begin{tikzpicture}[
     node distance=1.0cm and 1.5cm,
     stage_box/.style={draw, rectangle, fill=gray!5, minimum width=12cm, minimum height=2.2cm, align=left, rounded corners, dashed, draw=gray!40, font=\small},
@@ -421,14 +421,14 @@ To minimize computational complexity and eliminate joints that do not contribute
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/attention_waving_hand.png}
+        \includegraphics[width=0.98\linewidth]{plots/attention_waving_hand.png}
         \caption{Waving hand action}
         \label{fig:attn_waving}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/attention_jumping.png}
+        \includegraphics[width=0.98\linewidth]{plots/attention_jumping.png}
         \caption{Jumping action}
         \label{fig:attn_jumping}
     \end{subfigure}
@@ -448,14 +448,14 @@ To visualize the $128$-dimensional latent feature space learned from S-JEPA, we 
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/saliency_heatmap_waving_hand.png}
+        \includegraphics[width=0.98\linewidth]{plots/saliency_heatmap_waving_hand.png}
         \caption{Saliency of Waving hand action}
         \label{fig:saliency_heatmap_waving}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/saliency_heatmap_jumping.png}
+        \includegraphics[width=0.98\linewidth]{plots/saliency_heatmap_jumping.png}
         \caption{Saliency of Jumping action}
         \label{fig:saliency_heatmap_jumping}
     \end{subfigure}
@@ -484,14 +484,14 @@ The attention distribution results are visualized in Figure \ref{fig:attention_r
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/shap_summary_waving.png}
+        \includegraphics[width=0.98\linewidth]{plots/shap_summary_waving.png}
         \caption{Feature contribution for Waving hand}
         \label{fig:shap_waving}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{plots/shap_summary_jumping.png}
+        \includegraphics[width=0.98\linewidth]{plots/shap_summary_jumping.png}
         \caption{Feature contribution for Jumping}
         \label{fig:shap_jumping}
     \end{subfigure}
@@ -515,7 +515,7 @@ This result affirms that the model genuinely relies on the geometric kinematics 
 
 \begin{figure}[htbp]
 \centering
-\resizebox{0.8\columnwidth}{!}{%
+\resizebox{0.98\columnwidth}{!}{%
 \begin{tikzpicture}[
     node distance=0.8cm and 1.2cm,
     block/.style={draw, rectangle, fill=blue!10, text width=2.2cm, minimum height=0.8cm, align=center, rounded corners, font=\small},
