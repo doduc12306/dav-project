@@ -261,10 +261,18 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     if features_norm_lda.shape[1] == 1:
         features_norm_lda = np.hstack([features_norm_lda, np.zeros_like(features_norm_lda)])
         
+    # Filter classes to top 7 for clearer visualization
+    if len(unique_classes) > 7:
+        counts = np.bincount(labels_class)
+        top_classes = np.argsort(counts)[-7:]
+        target_classes = np.intersect1d(unique_classes, top_classes)
+    else:
+        target_classes = unique_classes
+        
     # Plot 1: Normalized Latent Space colored by Action Class (t-SNE only)
-    plt.figure(figsize=(8, 6))
-    colors_class = sns.color_palette("hls", len(unique_classes))
-    for idx, label in enumerate(unique_classes):
+    plt.figure(figsize=(10, 6))
+    colors_class = sns.color_palette("Set1", len(target_classes))
+    for idx, label in enumerate(target_classes):
         mask = labels_class == label
         class_name = NTU_ACTION_NAMES.get(label + 1, f"Action A{label+1}")
         plt.scatter(features_norm_tsne[mask, 0], features_norm_tsne[mask, 1], 
@@ -272,7 +280,7 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     plt.title("t-SNE Projection of Normalized Representations\n(Colored by Action Class)", fontsize=12, fontweight='bold', pad=12)
     plt.xlabel("t-SNE Dimension 1", fontsize=10)
     plt.ylabel("t-SNE Dimension 2", fontsize=10)
-    # Legend is disabled because 60/120 classes are too large for paper layout
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9, borderaxespad=0.)
     plt.grid(True, linestyle="--", alpha=0.5, zorder=1)
     plt.tight_layout()
     plt.savefig(os.path.join(plots_dir, "tsne_latent_space_by_class.png"), dpi=300)
@@ -314,7 +322,7 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.8))
     
     # Subplot A: t-SNE
-    for idx, label in enumerate(unique_classes):
+    for idx, label in enumerate(target_classes):
         mask = labels_class == label
         axes[0].scatter(features_norm_tsne[mask, 0], features_norm_tsne[mask, 1], 
                         color=colors_class[idx], alpha=0.8, edgecolors='k', s=35, zorder=2)
@@ -324,7 +332,7 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     axes[0].grid(True, linestyle="--", alpha=0.5, zorder=1)
     
     # Subplot B: UMAP
-    for idx, label in enumerate(unique_classes):
+    for idx, label in enumerate(target_classes):
         mask = labels_class == label
         axes[1].scatter(features_norm_umap[mask, 0], features_norm_umap[mask, 1], 
                         color=colors_class[idx], alpha=0.8, edgecolors='k', s=35, zorder=2)
@@ -334,7 +342,7 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     axes[1].grid(True, linestyle="--", alpha=0.5, zorder=1)
     
     # Subplot C: LDA
-    for idx, label in enumerate(unique_classes):
+    for idx, label in enumerate(target_classes):
         mask = labels_class == label
         axes[2].scatter(features_norm_lda[mask, 0], features_norm_lda[mask, 1], 
                         color=colors_class[idx], alpha=0.8, edgecolors='k', s=35, zorder=2)
