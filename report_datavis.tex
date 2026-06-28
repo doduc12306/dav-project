@@ -598,7 +598,6 @@ Empirical results are summarized in Table \ref{tab:results}:
 \end{itemize}
 
 \begin{table}[htbp]
-\begin{minipage}[t]{\columnwidth}
 \centering
 \caption{Action classification accuracy of S-JEPA on single data streams and the Ensemble Late Fusion combination.}
 \label{tab:results}
@@ -615,10 +614,9 @@ Velocity Stream & 65.81 & 68.20 \\
 \bottomrule
 \end{tabular}%
 }
-\end{minipage}
-\hfill
-\begin{minipage}[t]{\columnwidth}
-\centering
+
+\vspace{0.5cm}
+
 \caption{Comparison of Acc@1 (\%) accuracy of S-JEPA (Multi-stream Late Fusion) with other SOTA self-supervised methods.}
 \label{tab:sota_comparison}
 \resizebox{\linewidth}{!}{%
@@ -638,7 +636,6 @@ MAMP \cite{b3} & Joint & \textbf{78.6} & \textbf{80.9} \\
 \bottomrule
 \end{tabular}%
 }
-\end{minipage}
 \end{table}
 
 Furthermore, to contextualize our experimental results against other modern research, we compare the classification performance of S-JEPA (Joint and Ensemble) with other self-supervised learning models on the NTU-120 dataset (X-Sub and X-Set) in Table \ref{tab:sota_comparison}:
@@ -659,7 +656,6 @@ The Heatmap Confusion Matrix (Figure \ref{fig:confusion_matrix}) provides profou
 \section{Conclusion}
 This study has successfully deployed and experimentally validated the S-JEPA self-supervised learning system for the 3D skeleton-based action recognition task on NTU RGB+D 120, intricately linked with core knowledge in the data science pipeline. By synergizing skeleton kinematics analysis tools (EDA), statistical preprocessing and outlier removal methods, linear/non-linear feature correlation analysis (Pearson, Spearman, Chi-square), geometric feature extraction dimensionality reduction (PCA, Kernel PCA, ISOMAP, LDA), and model interpretability via XAI (SHAP, Attention, Gradient Saliency), we have perfected a comprehensive data analysis and visualization system, paving a highly promising direction for real-world human behavior surveillance applications.
 
-\section*{References}
 \begin{thebibliography}{00}
 \bibitem{b1} Shahroudy, A., Liu, J., Ng, T. T., \& Wang, G. (2016). Ntu rgb+ d: A large scale dataset for 3d human activity analysis. In \textit{Proceedings of the IEEE conference on computer vision and pattern recognition} (pp. 1010-1019).
 \bibitem{b2} Assran, M., Caron, M., Misra, I., Bojanowski, P., Joulin, A., Nicolas, M., ... \& LeCun, Y. (2023). Self-supervised learning from images with a joint-embedding predictive architecture. In \textit{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition} (pp. 15619-15629).
