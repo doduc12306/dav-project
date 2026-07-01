@@ -211,7 +211,7 @@ def train_classifier(data_dir, pretrain_path, epochs=15, batch_size=8, lr=1e-3, 
     print(f"Saved confusion matrix plot to {plots_dir}")
     
     # 4. Latent Space Visualization using t-SNE, UMAP, and LDA
-    visualize_latent_space(features_norm, features_raw, labels_class, labels_camera, plots_dir, dataset=dataset)
+    visualize_latent_space(sjepa_backbone, data_dir, plots_dir, device)
     
     # 5. Model Attention Visualization (Explainable AI - Attention Rollout)
     visualize_attention(sjepa_backbone, dataset, plots_dir, device)
@@ -224,19 +224,92 @@ def train_classifier(data_dir, pretrain_path, epochs=15, batch_size=8, lr=1e-3, 
             
 
 
-def visualize_latent_space(features_norm, features_raw, labels_class, labels_camera, plots_dir, dataset=None):
+def visualize_latent_space(sjepa_backbone, data_dir, plots_dir, device):
     """
-    Projects pre-extracted S-JEPA embeddings to 2D via t-SNE, UMAP, and LDA, and visualizes.
+    Projects a subset of S-JEPA embeddings (5-10 distinct classes, 100 samples each)
+    to 2D via t-SNE, UMAP, and LDA with color legends and transparency.
     """
-    if isinstance(features_norm, torch.Tensor):
-        features_norm = features_norm.numpy()
-    if isinstance(features_raw, torch.Tensor):
-        features_raw = features_raw.numpy()
-    if isinstance(labels_class, torch.Tensor):
-        labels_class = labels_class.numpy()
-    if isinstance(labels_camera, torch.Tensor):
-        labels_camera = labels_camera.numpy()
+    print("\n--- Running Latent Space Visualization (t-SNE, UMAP, LDA) ---")
+    # 1. Get all skeleton files in data_dir
+    all_filepaths = glob.glob(os.path.join(data_dir, "*.skeleton"))
+    if len(all_filepaths) == 0:
+        print("WARNING: No .skeleton files found to visualize!")
+        return
         
+    # We choose 5 distinct action classes:
+    # A1: drink water, A23: hand waving, A27: jump up, A50: punch/slap, A59: walking towards
+    target_action_ids = [1, 23, 27, 50, 59]
+    target_labels = [aid - 1 for aid in target_action_ids]
+    
+    # Group filepaths by action ID
+    from collections import defaultdict
+    files_by_action = defaultdict(list)
+    for filepath in all_filepaths:
+        meta = parse_skeleton_filename(filepath)
+        if meta and meta['action'] in target_action_ids:
+            files_by_action[meta['action']].append(filepath)
+            
+    # For each action, select 100 files (or fewer if not enough)
+    selected_filepaths = []
+    for aid in target_action_ids:
+        files = files_by_action[aid]
+        if len(files) > 0:
+            import random
+            random.seed(42)
+            random.shuffle(files)
+            selected_filepaths.extend(files[:min(100, len(files))])
+            
+    if len(selected_filepaths) == 0:
+        print("WARNING: No matching action classes found for visualization!")
+        return
+        
+    print(f"Selected {len(selected_filepaths)} samples across {len(target_action_ids)} target classes for visualization.")
+    
+    # Create temporary dataset objects for feature extraction
+    viz_dataset_norm = NTUSkeletonDataset(data_dir, max_frames=40, normalize=True)
+    viz_dataset_norm.filepaths = selected_filepaths
+    
+    viz_dataset_raw = NTUSkeletonDataset(data_dir, max_frames=40, normalize=False)
+    viz_dataset_raw.filepaths = selected_filepaths
+    
+    # Extract features
+    sjepa_backbone.eval()
+    
+    # Normalized features
+    norm_features = []
+    labels_class = []
+    labels_camera = []
+    
+    viz_loader_norm = DataLoader(viz_dataset_norm, batch_size=64, shuffle=False)
+    with torch.no_grad():
+        for idx_batch, (x, y) in enumerate(viz_loader_norm):
+            x = x.to(device)
+            feats = sjepa_backbone.extract_features(x)
+            norm_features.append(feats.cpu())
+            labels_class.append(y)
+            
+            # Retrieve camera metadata
+            start_idx = idx_batch * 64
+            for offset in range(x.size(0)):
+                filepath = viz_dataset_norm.filepaths[start_idx + offset]
+                meta = parse_skeleton_filename(filepath)
+                labels_camera.append(meta['camera'])
+                
+    features_norm = torch.cat(norm_features, dim=0).numpy()
+    labels_class = torch.cat(labels_class, dim=0).numpy()
+    labels_camera = np.array(labels_camera)
+    
+    # Raw features
+    raw_features = []
+    viz_loader_raw = DataLoader(viz_dataset_raw, batch_size=64, shuffle=False)
+    with torch.no_grad():
+        for x, _ in viz_loader_raw:
+            x = x.to(device)
+            feats = sjepa_backbone.extract_features(x)
+            raw_features.append(feats.cpu())
+            
+    features_raw = torch.cat(raw_features, dim=0).numpy()
+    
     # Run t-SNE
     perplexity = min(30, len(features_norm) - 1)
     tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42, max_iter=1000)
@@ -261,14 +334,8 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     if features_norm_lda.shape[1] == 1:
         features_norm_lda = np.hstack([features_norm_lda, np.zeros_like(features_norm_lda)])
         
-    # Filter classes to top 7 for clearer visualization
-    if len(unique_classes) > 7:
-        counts = np.bincount(labels_class)
-        top_classes = np.argsort(counts)[-7:]
-        target_classes = np.intersect1d(unique_classes, top_classes)
-    else:
-        target_classes = unique_classes
-        
+    target_classes = unique_classes
+    
     # Plot 1: Normalized Latent Space colored by Action Class (t-SNE only)
     plt.figure(figsize=(10, 6))
     colors_class = sns.color_palette("Set1", len(target_classes))
@@ -276,7 +343,7 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
         mask = labels_class == label
         class_name = NTU_ACTION_NAMES.get(label + 1, f"Action A{label+1}")
         plt.scatter(features_norm_tsne[mask, 0], features_norm_tsne[mask, 1], 
-                    color=colors_class[idx], label=class_name, alpha=0.8, edgecolors='k', s=45, zorder=2)
+                    color=colors_class[idx], label=class_name, alpha=0.6, edgecolors='k', s=45, zorder=2)
     plt.title("t-SNE Projection of Normalized Representations\n(Colored by Action Class)", fontsize=12, fontweight='bold', pad=12)
     plt.xlabel("t-SNE Dimension 1", fontsize=10)
     plt.ylabel("t-SNE Dimension 2", fontsize=10)
@@ -293,7 +360,7 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     for idx, cam in enumerate(unique_cams):
         mask = labels_camera == cam
         plt.scatter(features_norm_tsne[mask, 0], features_norm_tsne[mask, 1], 
-                    color=colors_cam[idx], label=f"Camera C{cam:03d}", alpha=0.8, edgecolors='k', s=60, zorder=2)
+                    color=colors_cam[idx], label=f"Camera C{cam:03d}", alpha=0.6, edgecolors='k', s=60, zorder=2)
     plt.title("t-SNE of Normalized Representations (Colored by Camera ID)\n[View-Invariance Test]", fontsize=12, fontweight='bold', pad=12)
     plt.xlabel("t-SNE Dimension 1", fontsize=10)
     plt.ylabel("t-SNE Dimension 2", fontsize=10)
@@ -308,7 +375,7 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     for idx, cam in enumerate(unique_cams):
         mask = labels_camera == cam
         plt.scatter(features_raw_tsne[mask, 0], features_raw_tsne[mask, 1], 
-                    color=colors_cam[idx], label=f"Camera C{cam:03d}", alpha=0.8, edgecolors='k', s=60, zorder=2)
+                    color=colors_cam[idx], label=f"Camera C{cam:03d}", alpha=0.6, edgecolors='k', s=60, zorder=2)
     plt.title("t-SNE of Raw (Unnormalized) Representations (Colored by Camera ID)\n[Exposing Camera Bias]", fontsize=12, fontweight='bold', pad=12)
     plt.xlabel("t-SNE Dimension 1", fontsize=10)
     plt.ylabel("t-SNE Dimension 2", fontsize=10)
@@ -319,13 +386,14 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     plt.close()
  
     # Plot 4: t-SNE vs UMAP vs LDA comparison grid
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.8))
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5.2))
     
     # Subplot A: t-SNE
     for idx, label in enumerate(target_classes):
         mask = labels_class == label
+        class_name = NTU_ACTION_NAMES.get(label + 1, f"Action A{label+1}")
         axes[0].scatter(features_norm_tsne[mask, 0], features_norm_tsne[mask, 1], 
-                        color=colors_class[idx], alpha=0.8, edgecolors='k', s=35, zorder=2)
+                        color=colors_class[idx], label=class_name, alpha=0.6, edgecolors='k', s=35, zorder=2)
     axes[0].set_title("t-SNE Projection", fontsize=11, fontweight='bold', pad=8)
     axes[0].set_xlabel("t-SNE Dim 1", fontsize=9)
     axes[0].set_ylabel("t-SNE Dim 2", fontsize=9)
@@ -334,8 +402,9 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     # Subplot B: UMAP
     for idx, label in enumerate(target_classes):
         mask = labels_class == label
+        class_name = NTU_ACTION_NAMES.get(label + 1, f"Action A{label+1}")
         axes[1].scatter(features_norm_umap[mask, 0], features_norm_umap[mask, 1], 
-                        color=colors_class[idx], alpha=0.8, edgecolors='k', s=35, zorder=2)
+                        color=colors_class[idx], label=class_name, alpha=0.6, edgecolors='k', s=35, zorder=2)
     axes[1].set_title("UMAP Projection", fontsize=11, fontweight='bold', pad=8)
     axes[1].set_xlabel("UMAP Dim 1", fontsize=9)
     axes[1].set_ylabel("UMAP Dim 2", fontsize=9)
@@ -344,14 +413,20 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
     # Subplot C: LDA
     for idx, label in enumerate(target_classes):
         mask = labels_class == label
+        class_name = NTU_ACTION_NAMES.get(label + 1, f"Action A{label+1}")
         axes[2].scatter(features_norm_lda[mask, 0], features_norm_lda[mask, 1], 
-                        color=colors_class[idx], alpha=0.8, edgecolors='k', s=35, zorder=2)
+                        color=colors_class[idx], label=class_name, alpha=0.6, edgecolors='k', s=35, zorder=2)
     axes[2].set_title("LDA Projection (Supervised)", fontsize=11, fontweight='bold', pad=8)
     axes[2].set_xlabel("LDA Dim 1", fontsize=9)
     axes[2].set_ylabel("LDA Dim 2", fontsize=9)
     axes[2].grid(True, linestyle="--", alpha=0.5, zorder=1)
     
-    fig.suptitle("Comparison of Dimensionality Reduction Methods on S-JEPA Representations", fontsize=13, fontweight='bold', y=0.98)
+    # Add a unified legend at the bottom of the grid
+    handles, labels_legend = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels_legend, loc='lower center', ncol=len(target_classes), 
+               bbox_to_anchor=(0.5, -0.05), frameon=True, facecolor='white', edgecolor='lightgrey', fontsize=10)
+    
+    fig.suptitle("Comparison of Dimensionality Reduction Methods on S-JEPA Representations", fontsize=13, fontweight='bold', y=1.02)
     plt.tight_layout()
     plt.savefig(os.path.join(plots_dir, "latent_comparison_tsne_umap_lda.png"), dpi=300, bbox_inches='tight')
     plt.close()
@@ -360,24 +435,23 @@ def visualize_latent_space(features_norm, features_raw, labels_class, labels_cam
 
     # Export projection coordinates as a CSV file for interactive Streamlit dashboard
     import pandas as pd
-    if dataset is not None:
-        df_proj = pd.DataFrame({
-            "file_name": [os.path.basename(p) for p in dataset.filepaths[:len(features_norm)]],
-            "tsne_norm_x": features_norm_tsne[:, 0],
-            "tsne_norm_y": features_norm_tsne[:, 1],
-            "tsne_raw_x": features_raw_tsne[:, 0],
-            "tsne_raw_y": features_raw_tsne[:, 1],
-            "umap_norm_x": features_norm_umap[:, 0],
-            "umap_norm_y": features_norm_umap[:, 1],
-            "lda_norm_x": features_norm_lda[:, 0],
-            "lda_norm_y": features_norm_lda[:, 1],
-            "class_id": labels_class + 1,
-            "class_name": [NTU_ACTION_NAMES.get(l + 1, f"Action A{l+1}") for l in labels_class],
-            "camera_id": labels_camera
-        })
-        csv_path = os.path.join(plots_dir, "latent_projections.csv")
-        df_proj.to_csv(csv_path, index=False)
-        print(f"Saved interactive projections to {csv_path}")
+    df_proj = pd.DataFrame({
+        "file_name": [os.path.basename(p) for p in selected_filepaths],
+        "tsne_norm_x": features_norm_tsne[:, 0],
+        "tsne_norm_y": features_norm_tsne[:, 1],
+        "tsne_raw_x": features_raw_tsne[:, 0],
+        "tsne_raw_y": features_raw_tsne[:, 1],
+        "umap_norm_x": features_norm_umap[:, 0],
+        "umap_norm_y": features_norm_umap[:, 1],
+        "lda_norm_x": features_norm_lda[:, 0],
+        "lda_norm_y": features_norm_lda[:, 1],
+        "class_id": labels_class + 1,
+        "class_name": [NTU_ACTION_NAMES.get(l + 1, f"Action A{l+1}") for l in labels_class],
+        "camera_id": labels_camera
+    })
+    csv_path = os.path.join(plots_dir, "latent_projections.csv")
+    df_proj.to_csv(csv_path, index=False)
+    print(f"Saved interactive projections to {csv_path}")
 
 def visualize_saliency(model, dataset, plots_dir, device):
     """
