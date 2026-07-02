@@ -9,8 +9,53 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
 
-from src.datasets.ntu_dataset import SJEPA_UnsupervisedDataset
-from src.core.sjepa import sjepa_base
+from src.data_utils import read_skeleton_file, normalize_skeleton
+from src.masking import generate_spatiotemporal_masks
+from src.model_sjepa import SJEPA
+
+class NTUSkeletonDataset(torch.utils.data.Dataset):
+    """
+    Legacy PyTorch Dataset to load NTU skeleton data.
+    Pads or truncates sequences to a fixed length for batching.
+    Used by downstream.py for visualizations.
+    """
+    def __init__(self, data_dir, max_frames=40, normalize=True, limit=None):
+        self.max_frames = max_frames
+        self.normalize = normalize
+        import glob
+        self.filepaths = glob.glob(os.path.join(data_dir, "*.skeleton"))
+        
+        if len(self.filepaths) == 0:
+            raise FileNotFoundError(f"No .skeleton files found in {data_dir}. Run eda.py first to create mock data!")
+            
+        if limit is not None and limit > 0:
+            sorted_paths = sorted(self.filepaths)
+            import random
+            random.seed(42)
+            random.shuffle(sorted_paths)
+            self.filepaths = sorted_paths[:limit]
+
+    def __len__(self):
+        return len(self.filepaths)
+
+    def __getitem__(self, idx):
+        filepath = self.filepaths[idx]
+        joints, meta = read_skeleton_file(filepath)
+        
+        if self.normalize:
+            joints = normalize_skeleton(joints)
+        
+        num_frames = joints.shape[0]
+        if num_frames >= self.max_frames:
+            joints = joints[:self.max_frames]
+        else:
+            padding = np.zeros((self.max_frames - num_frames, 2, 25, 3), dtype=np.float32)
+            joints = np.concatenate([joints, padding], axis=0)
+            
+        action_class = meta['action']
+        label = action_class - 1
+        x = torch.from_numpy(joints[:, 0, :, :]).float()
+        return x, label
 
 def train_sjepa(
     data_dir,
@@ -22,32 +67,20 @@ def train_sjepa(
     ema_decay=0.996,
     checkpoint_dir="./checkpoints",
     plots_dir="./plots",
-    max_frames=120,
-    embed_dim=256,
-    depth=8,
-    num_heads=8,
-    predictor_depth=5,
-    segment_length=4,
-    limit=None,
-    protocol=None
+    max_frames=40,
+    embed_dim=128,
+    enc_depth=3,
+    pred_depth=2,
+    num_heads=4,
+    limit=None
 ):
     os.makedirs(checkpoint_dir, exist_ok=True)
     os.makedirs(plots_dir, exist_ok=True)
 
     # 1. Load Dataset
     print(f"Initializing NTU Skeleton Dataset from {data_dir}...")
-    dataset = SJEPA_UnsupervisedDataset(
-        data_path=data_dir,
-        max_frames=max_frames,
-        mask_ratio=0.9,
-        protocol=protocol,
-        segment_length=segment_length
-    )
-    
-    if limit is not None and limit > 0:
-        # Apply sample limit for quick testing/debugging
-        dataset.data_paths = dataset.data_paths[:limit]
-        print(f"Sample limit applied. Using {len(dataset.data_paths)} files.")
+    dataset = NTUSkeletonDataset(data_dir, max_frames=max_frames, limit=limit)
+    print(f"Dataset initialized with {len(dataset)} files.")
 
     use_cuda = torch.cuda.is_available()
     num_workers = 4 if use_cuda else 0
@@ -60,14 +93,14 @@ def train_sjepa(
         pin_memory=use_cuda
     )
 
-    # 2. Instantiate S-JEPA Base Model (Official Configuration)
-    model = sjepa_base(
+    # 2. Instantiate S-JEPA Mock Model
+    model = SJEPA(
+        temp_patch_size=4,
         embed_dim=embed_dim,
-        num_frames=max_frames,
-        depth=depth,
+        enc_depth=enc_depth,
+        pred_depth=pred_depth,
         num_heads=num_heads,
-        predictor_depth=predictor_depth,
-        segment_length=segment_length
+        ema_decay=ema_decay
     )
     
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -100,17 +133,22 @@ def train_sjepa(
         
         pbar = tqdm(dataloader, desc=f"Epoch [{epoch}/{epochs}]", unit="batch")
         
-        for batch_idx, (x_student, x_teacher, context_idx, target_idx) in enumerate(pbar):
-            x_student = x_student.to(device)
-            x_teacher = x_teacher.to(device)
-            context_idx = context_idx.to(device)
-            target_idx = target_idx.to(device)
+        for batch_idx, (x, _) in enumerate(pbar):
+            x = x.to(device) # shape: (B, T, 25, 3)
+            
+            # Generate shared masks for this batch
+            context_mask, target_masks = generate_spatiotemporal_masks(
+                num_frames=max_frames, temp_patch_size=4, num_joints=25
+            )
+            
+            context_mask = context_mask.to(device)
+            target_masks = [tm.to(device) for tm in target_masks]
 
             optimizer.zero_grad()
 
             # Autocast float16 mixed precision training
             with torch.cuda.amp.autocast(enabled=use_cuda):
-                loss = model(x_student, x_teacher, context_idx, target_idx)
+                loss = model.forward_pretrain(x, context_mask, target_masks)
 
             if use_cuda:
                 scaler.scale(loss).backward()
@@ -120,8 +158,8 @@ def train_sjepa(
                 loss.backward()
                 optimizer.step()
 
-            # Smoothly update teacher encoder weights using EMA
-            model.update_teacher(m=ema_decay)
+            # Smoothly update target encoder weights using EMA
+            model.update_target_encoder()
 
             total_loss += loss.item()
             pbar.set_postfix({"Loss": f"{loss.item():.5f}"})
@@ -164,14 +202,12 @@ if __name__ == "__main__":
     parser.add_argument("--ema_decay", type=float, default=0.996, help="EMA decay rate")
     parser.add_argument("--checkpoint_dir", type=str, default="./checkpoints", help="Directory to save weights")
     parser.add_argument("--plots_dir", type=str, default="./plots", help="Directory to save loss curves")
-    parser.add_argument("--max_frames", type=int, default=120, help="Sequence max length")
-    parser.add_argument("--embed_dim", type=int, default=256, help="Feature embedding dimension")
-    parser.add_argument("--depth", type=int, default=8, help="Transformer encoder depth")
-    parser.add_argument("--num_heads", type=int, default=8, help="Attention heads")
-    parser.add_argument("--predictor_depth", type=int, default=5, help="Transformer predictor depth")
-    parser.add_argument("--segment_length", type=int, default=4, help="Masking segment length")
+    parser.add_argument("--max_frames", type=int, default=40, help="Sequence max length")
+    parser.add_argument("--embed_dim", type=int, default=128, help="Feature embedding dimension")
+    parser.add_argument("--enc_depth", type=int, default=3, help="Encoder depth")
+    parser.add_argument("--pred_depth", type=int, default=2, help="Predictor depth")
+    parser.add_argument("--num_heads", type=int, default=4, help="Attention heads")
     parser.add_argument("--limit", type=int, default=-1, help="Limit number of samples for testing")
-    parser.add_argument("--protocol", type=str, default=None, help="Protocol split to filter data (e.g. xsub)")
 
     args = parser.parse_args()
 
@@ -187,12 +223,11 @@ if __name__ == "__main__":
         plots_dir=args.plots_dir,
         max_frames=args.max_frames,
         embed_dim=args.embed_dim,
-        depth=args.depth,
+        enc_depth=args.enc_depth,
+        pred_depth=args.pred_depth,
         num_heads=args.num_heads,
-        predictor_depth=args.predictor_depth,
-        segment_length=args.segment_length,
-        limit=args.limit if args.limit > 0 else None,
-        protocol=args.protocol
+        limit=args.limit if args.limit > 0 else None
     )
+
 
 
