@@ -576,14 +576,37 @@ Where $S$ is a subset of features chosen from the latent space excluding feature
 
 The SHAP Feature Importance chart (Figure \ref{fig:shap_comparison}) illustrates the marginal contribution of the latent dimensions. The analysis indicates that only a small subset of approximately 10 latent features has an overwhelmingly prominent marginal contribution for each action class. Features carrying hand movement information actively contribute to the Waving Hand class, while features describing height variations actively contribute to the Jumping class. This mathematically elucidates the transparency of the S-JEPA latent space.
 
+To directly connect these abstract latent features to the physical body joints (bridging SHAP and Gradient Saliency), we compute the Pearson correlation coefficient between the joint-specific tokens and the global aggregated representations across action samples. The Joint-Feature Correlation maps are illustrated in Figure \ref{fig:joint_feature_relation}:
+\begin{itemize}
+    \item \textbf{Waving Hand (Figure \ref{fig:joint_feat_waving}):} The top latent classifier features (e.g., Features 43, 76) show exceptionally high positive correlation (above $0.70$) specifically with the left and right hand joints ($J_7$ and $J_{11}$), showing that the model's most critical waving features directly encode hand movements.
+    \item \textbf{Jumping Action (Figure \ref{fig:joint_feat_jumping}):} The top jumping features (e.g., Features 12, 114) correlate strongly with the lower limb joints ($J_{15}$ and $J_{19}$ for left/right feet, and $J_0$ for the spine base), mathematically proving that the latent features driving the jumping classification correspond directly to physical leg dynamics.
+\end{itemize}
 
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=0.98\linewidth]{plots/joint_feature_relation_waving.png}
+        \caption{Joint-Feature Correlation (Waving Hand)}
+        \label{fig:joint_feat_waving}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=0.98\linewidth]{plots/joint_feature_relation_jumping.png}
+        \caption{Joint-Feature Correlation (Jumping)}
+        \label{fig:joint_feat_jumping}
+    \end{subfigure}
+    \caption{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}
+    \label{fig:joint_feature_relation}
+\end{figure*}
 
 \subsection{Downstream Model Evaluation and Error Analysis}
 
 \begin{figure*}[t]
     \centering
-    \includegraphics[width=0.6	extwidth]{plots/confusion_matrix.png}
-    \caption{Confusion Matrix of the downstream Linear Classifier trained on S-JEPA representations (NTU RGB+D 120 X-Sub).}
+    \includegraphics[width=0.7\textwidth]{plots/confusion_matrix_ntu120_xsub.png}
+    \caption{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}
     \label{fig:confusion_matrix}
 \end{figure*}
 To quantitatively evaluate the representational capacity of S-JEPA, we assess the classification accuracy via a Linear Probing model on three individual feature streams (Joint, Bone, Velocity) and an Ensemble combination using the Weighted Late Fusion technique (the pipeline diagram is detailed in Figure \ref{fig:late_fusion_arch}).

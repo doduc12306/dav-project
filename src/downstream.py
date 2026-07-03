@@ -220,8 +220,10 @@ def train_classifier(data_dir, pretrain_path, epochs=15, batch_size=8, lr=1e-3, 
     # 6. Gradient-based Saliency Visualization (Explainable AI - Gradient Saliency)
     visualize_saliency(model, dataset, plots_dir, device)
     
-    # 7. SHAP Explanation (Explainable AI - Shapley Additive Explanations)
-    visualize_shap(model, features_norm, labels_class, plots_dir, device)
+    # 7. SHAP Explanation (Explainable AI - Shapley Additive Explanations) and Joint-Feature Correlation
+    visualize_shap(model, dataset, features_norm, labels_class, plots_dir, device)
+
+
             
 
 
@@ -501,7 +503,7 @@ def visualize_saliency(model, dataset, plots_dir, device):
         # Draw 2D Skeleton Joint Saliency Overlay (instead of abstract 2D heatmap matrix)
         plt.figure(figsize=(6, 8))
         
-        # Extract mean coordinates across all frames for 2D front view plotting (X vs Z)
+        # Extract mean coordinates across all frames for 2D front view plotting (X vs Y)
         coords = x.detach().squeeze(0).cpu().numpy() # shape (T, 25, 3)
         mean_coords = coords.mean(axis=0) # shape (25, 3)
         
@@ -514,7 +516,7 @@ def visualize_saliency(model, dataset, plots_dir, device):
         for joint_a, joint_b in NTU_CONNECTIONS:
             plt.plot(
                 [mean_coords[joint_a, 0], mean_coords[joint_b, 0]],
-                [mean_coords[joint_a, 2], mean_coords[joint_b, 2]],
+                [mean_coords[joint_a, 1], mean_coords[joint_b, 1]],
                 color='dimgrey',
                 linewidth=2.5,
                 zorder=1
@@ -528,7 +530,7 @@ def visualize_saliency(model, dataset, plots_dir, device):
         # Plot joints colored and sized by relative saliency intensity
         sc = plt.scatter(
             mean_coords[:, 0],
-            mean_coords[:, 2],
+            mean_coords[:, 1],
             c=joint_saliency,
             cmap="Oranges",
             s=300 * joint_saliency + 80,
@@ -544,7 +546,7 @@ def visualize_saliency(model, dataset, plots_dir, device):
         for j, name in body_parts_names.items():
             plt.text(
                 mean_coords[j, 0] + 0.04,
-                mean_coords[j, 2],
+                mean_coords[j, 1],
                 name,
                 fontsize=9,
                 fontweight='bold',
@@ -586,9 +588,9 @@ def visualize_saliency(model, dataset, plots_dir, device):
         plt.close()
         print(f"Saved saliency plots for {action_name}")
 
-def visualize_shap(model, features_norm, labels_class, plots_dir, device):
+def visualize_shap(model, dataset, features_norm, labels_class, plots_dir, device):
     """
-    Computes SHAP values using pre-extracted S-JEPA latent features.
+    Computes SHAP values using S-JEPA latent features and connects top features to body joints.
     """
     print("\nComputing SHAP values for latent feature explanation (XAI - SHAP)...")
     model.eval()
@@ -644,6 +646,102 @@ def visualize_shap(model, features_norm, labels_class, plots_dir, device):
     plt.close()
     
     print(f"Saved SHAP summary plots in {plots_dir}")
+
+    # Now, connect SHAP features to physical joints!
+    print("Computing Joint-Feature Correlation Map (XAI Connection)...")
+    
+    # 1. Identify top 5 features according to mean absolute SHAP value
+    shap_waving_imp = np.abs(shap_values[:, :, class_to_explain_waving].values).mean(axis=0)
+    top_feats_waving = np.argsort(shap_waving_imp)[-5:][::-1]
+    
+    shap_jumping_imp = np.abs(shap_values[:, :, class_to_explain_jumping].values).mean(axis=0)
+    top_feats_jumping = np.argsort(shap_jumping_imp)[-5:][::-1]
+    
+    # 2. Extract joint-specific features for these samples
+    # We will run the backbone on the dataset to get the individual joint features
+    use_cuda = torch.cuda.is_available()
+    num_workers = 4 if use_cuda else 0
+    loader = DataLoader(dataset, batch_size=256, shuffle=False, num_workers=num_workers)
+    
+    feats_list = []
+    global_feats_list = []
+    labels_list = []
+    
+    with torch.no_grad():
+        for x, y in loader:
+            x = x.to(device)
+            B, T, J, C = x.shape
+            N_t = T // model.backbone.temp_patch_size
+            tokens = model.backbone.patch_proj(x)
+            pos_embed = model.backbone.pos_embedder(N_t, J)
+            tokens = tokens + pos_embed.unsqueeze(0)
+            tokens_flat = tokens.view(B, N_t * J, -1)
+            feats = model.backbone.context_encoder(tokens_flat) # (B, N_t * J, 128)
+            
+            feats_list.append(feats.cpu())
+            global_feats = feats.mean(dim=1) # (B, 128)
+            global_feats_list.append(global_feats.cpu())
+            labels_list.append(y)
+            
+    all_feats = torch.cat(feats_list, dim=0).numpy() # (N, 250, 128)
+    all_global = torch.cat(global_feats_list, dim=0).numpy() # (N, 128)
+    all_labels = torch.cat(labels_list, dim=0).numpy()
+    
+    # Compute correlation map for Waving Hand samples
+    waving_mask = (all_labels == class_to_explain_waving)
+    waving_feats = all_feats[waving_mask] # (N_waving, 250, 128)
+    waving_global = all_global[waving_mask] # (N_waving, 128)
+    
+    corr_waving = np.zeros((5, 25))
+    for i, d in enumerate(top_feats_waving):
+        for j in range(25):
+            joint_feats_d = waving_feats[:, j::25, d].mean(axis=1) # (N_waving,)
+            global_feats_d = waving_global[:, d] # (N_waving,)
+            if np.std(joint_feats_d) > 1e-6 and np.std(global_feats_d) > 1e-6:
+                corr_waving[i, j] = np.corrcoef(joint_feats_d, global_feats_d)[0, 1]
+                
+    # Jumping samples
+    jumping_mask = (all_labels == class_to_explain_jumping)
+    jumping_feats = all_feats[jumping_mask]
+    jumping_global = all_global[jumping_mask]
+    
+    corr_jumping = np.zeros((5, 25))
+    for i, d in enumerate(top_feats_jumping):
+        for j in range(25):
+            joint_feats_d = jumping_feats[:, j::25, d].mean(axis=1)
+            global_feats_d = jumping_global[:, d]
+            if np.std(joint_feats_d) > 1e-6 and np.std(global_feats_d) > 1e-6:
+                corr_jumping[i, j] = np.corrcoef(joint_feats_d, global_feats_d)[0, 1]
+                
+    body_parts_names = {
+        3: "Head", 7: "L Hand", 11: "R Hand", 15: "L Foot", 19: "R Foot", 0: "Spine Base"
+    }
+    joint_labels = [f"J{j} ({body_parts_names[j]})" if j in body_parts_names else f"J{j}" for j in range(25)]
+    
+    # Plot Waving correlation map
+    plt.figure(figsize=(10, 5))
+    sns.heatmap(corr_waving, annot=True, fmt=".2f", cmap="coolwarm", xticklabels=joint_labels, 
+                yticklabels=[f"Feature {d}" for d in top_feats_waving], cbar_kws={'label': 'Correlation Coefficient'})
+    plt.title(f"Joint-Feature Correlation Map ({class_name_waving})\nConnecting Physical Joints to Latent SHAP Features", fontsize=11, fontweight='bold', pad=15)
+    plt.xticks(rotation=45, ha='right', fontsize=8)
+    plt.yticks(rotation=0, fontsize=9)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, "joint_feature_relation_waving.png"), dpi=300)
+    plt.close()
+    
+    # Plot Jumping correlation map
+    plt.figure(figsize=(10, 5))
+    sns.heatmap(corr_jumping, annot=True, fmt=".2f", cmap="coolwarm", xticklabels=joint_labels, 
+                yticklabels=[f"Feature {d}" for d in top_feats_jumping], cbar_kws={'label': 'Correlation Coefficient'})
+    plt.title(f"Joint-Feature Correlation Map ({class_name_jumping})\nConnecting Physical Joints to Latent SHAP Features", fontsize=11, fontweight='bold', pad=15)
+    plt.xticks(rotation=45, ha='right', fontsize=8)
+    plt.yticks(rotation=0, fontsize=9)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, "joint_feature_relation_jumping.png"), dpi=300)
+    plt.close()
+    
+    print("Saved Joint-Feature Relation maps successfully!")
+
 
 def visualize_attention(sjepa, dataset, plots_dir, device):
     """
@@ -728,6 +826,7 @@ def visualize_attention(sjepa, dataset, plots_dir, device):
         plt.savefig(os.path.join(plots_dir, filename), dpi=300)
         plt.close()
         print(f"Saved attention map plot for {action_name} as {filename}")
+
 
 if __name__ == "__main__":
     import argparse
