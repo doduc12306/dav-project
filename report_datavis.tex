@@ -122,14 +122,14 @@ We utilize visual charts to analyze the data structure:
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/action_distribution.png}
         \caption{Action Distribution}
         \label{fig:action_dist}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/frame_distribution.png}
         \caption{Frame Count Distribution}
@@ -141,14 +141,14 @@ We utilize visual charts to analyze the data structure:
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/joint_dynamics_hand_waving.png}
         \caption{Waving Action}
         \label{fig:dyn_waving}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/joint_dynamics_jump_up.png}
         \caption{Jumping Action}
@@ -200,14 +200,14 @@ Figure \ref{fig:skeleton_comparison} visualizes the comparison between the raw s
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/S006C001P023R002A027_raw_3d.png}
         \caption{Raw skeleton coordinates tilted by the C001 camera angle.}
         \label{fig:skele_raw}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/S006C001P023R002A027_normalized_3d.png}
         \caption{Normalized coordinates, straightened and translated to the Spine Base.}
@@ -303,21 +303,21 @@ The self-supervised learning system S-JEPA is built upon three main neural netwo
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.32	extwidth}
+    \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_raw_by_camera.png}
         \caption{Raw latent space by Camera ID}
         \label{fig:tsne_raw_cam}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32	extwidth}
+    \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_camera.png}
         \caption{Normalized latent space by Camera ID}
         \label{fig:tsne_norm_cam}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32	extwidth}
+    \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_class.png}
         \caption{Normalized latent space by Action Class}
@@ -419,14 +419,14 @@ To minimize computational complexity and eliminate joints that do not contribute
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/attention_waving_hand.png}
         \caption{Waving hand action}
         \label{fig:attn_waving}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/attention_jumping.png}
         \caption{Jumping action}
@@ -446,14 +446,14 @@ To visualize the $128$-dimensional latent feature space learned from S-JEPA, we 
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/saliency_heatmap_waving_hand.png}
         \caption{Saliency of Waving hand action}
         \label{fig:saliency_heatmap_waving}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/saliency_heatmap_jumping.png}
         \caption{Saliency of Jumping action}
@@ -482,14 +482,14 @@ The attention distribution results are visualized in Figure \ref{fig:attention_r
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/shap_summary_waving.png}
         \caption{Feature contribution for Waving hand}
         \label{fig:shap_waving}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48	extwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.98\linewidth]{plots/shap_summary_jumping.png}
         \caption{Feature contribution for Jumping}
@@ -515,7 +515,7 @@ This result affirms that the model genuinely relies on the geometric kinematics 
 
 \begin{figure*}[t]
 \centering
-\resizebox{0.9	extwidth}{!}{%
+\resizebox{0.9\textwidth}{!}{%
 \begin{tikzpicture}[
     node distance=0.8cm and 1.2cm,
     block/.style={draw, rectangle, fill=blue!10, text width=2.2cm, minimum height=0.8cm, align=center, rounded corners, font=\small},
@@ -725,7 +725,7 @@ Downstream Full Fine-Tuning & 10 & 15 minutes \\
 \end{table}
 
 \subsubsection{Linear Probing vs. Full Fine-Tuning Analysis}
-To justify the choice of Linear Probing (frozen S-JEPA backbone) as our primary downstream evaluation method, we compare its performance and characteristics with Full Fine-Tuning, where all weights of the Context Encoder are updated. The comparative results are summarized in Table \ref{tab:probe_vs_ft}.
+To justify the choice of Linear Probing (frozen S-JEPA backbone) as our primary downstream evaluation method, we compare its performance and characteristics with Full Fine-Tuning reported in the original S-JEPA work \cite{b7}, where all weights of the Context Encoder are updated. The comparative results are summarized in Table \ref{tab:probe_vs_ft}.
 
 Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) because the S-JEPA backbone weights are optimized to adapt directly to class boundaries. However, Linear Probing offers significant practical advantages:
 \begin{enumerate}
@@ -743,8 +743,8 @@ Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) beca
 \toprule
 \textbf{Evaluation Protocol} & \textbf{NTU-120 X-Sub (\%)} & \textbf{NTU-120 X-Set (\%)} \\
 \midrule
-Linear Probing (Frozen) & 78.30 & 80.50 \\
-Full Fine-Tuning (Trainable) & 80.42 & 82.35 \\
+Linear Probing (Frozen - Ours) & 78.30 & 80.50 \\
+Full Fine-Tuning (Trainable - S-JEPA \cite{b7}) & 80.42 & 82.35 \\
 \bottomrule
 \end{tabular}
 \end{table}
