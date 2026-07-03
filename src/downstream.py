@@ -497,21 +497,69 @@ def visualize_saliency(model, dataset, plots_dir, device):
         if saliency_2d.max() > 0:
             saliency_2d = saliency_2d / saliency_2d.max()
             
-        plt.figure(figsize=(10, 6))
-        body_parts_names = {
-            3: "Head", 7: "L Hand", 11: "R Hand", 15: "L Foot", 19: "R Foot", 0: "Spine Base", 20: "Spine Shoulder"
-        }
-        joint_labels = [f"J{j} ({body_parts_names[j]})" if j in body_parts_names else f"J{j}" for j in range(25)]
+        # Draw 2D Skeleton Joint Saliency Overlay (instead of abstract 2D heatmap matrix)
+        plt.figure(figsize=(6, 8))
         
-        sns.heatmap(saliency_2d.T, cmap="Oranges", xticklabels=5, yticklabels=joint_labels)
-        plt.title(f"Spatio-Temporal Gradient Saliency Heatmap\nAction: {action_name}", fontsize=13, fontweight='bold')
-        plt.xlabel("Frame Index")
-        plt.ylabel("Joint")
+        # Extract mean coordinates across all frames for 2D front view plotting (X vs Z)
+        coords = x.detach().squeeze(0).cpu().numpy() # shape (T, 25, 3)
+        mean_coords = coords.mean(axis=0) # shape (25, 3)
+        
+        try:
+            from src.data_utils import NTU_CONNECTIONS
+        except ImportError:
+            from data_utils import NTU_CONNECTIONS
+
+        # Plot bones (skeleton connections)
+        for joint_a, joint_b in NTU_CONNECTIONS:
+            plt.plot(
+                [mean_coords[joint_a, 0], mean_coords[joint_b, 0]],
+                [mean_coords[joint_a, 2], mean_coords[joint_b, 2]],
+                color='dimgrey',
+                linewidth=2.5,
+                zorder=1
+            )
+            
+        # Normalize joint saliency specifically for scatter plot color/size
+        joint_saliency = saliency_2d.mean(axis=0)
+        if joint_saliency.max() > 0:
+            joint_saliency = joint_saliency / joint_saliency.max()
+            
+        # Plot joints colored and sized by relative saliency intensity
+        sc = plt.scatter(
+            mean_coords[:, 0],
+            mean_coords[:, 2],
+            c=joint_saliency,
+            cmap="Oranges",
+            s=300 * joint_saliency + 80,
+            edgecolors='black',
+            linewidths=1.2,
+            zorder=2
+        )
+        
+        # Annotate key joints for orientation
+        body_parts_names = {
+            3: "Head", 7: "L Hand", 11: "R Hand", 15: "L Foot", 19: "R Foot", 0: "Spine Base"
+        }
+        for j, name in body_parts_names.items():
+            plt.text(
+                mean_coords[j, 0] + 0.04,
+                mean_coords[j, 2],
+                name,
+                fontsize=9,
+                fontweight='bold',
+                bbox=dict(facecolor='white', alpha=0.6, edgecolor='none', pad=1)
+            )
+            
+        plt.colorbar(sc, label="Relative Joint Saliency Intensity")
+        plt.title(f"Gradient Saliency Joint Overlay\nAction: {action_name}", fontsize=13, fontweight='bold', pad=15)
+        plt.axis('off')
+        plt.gca().set_aspect('equal')
         plt.tight_layout()
         
         filename_heatmap = f"saliency_heatmap_{action_name.replace(' ', '_').lower()}.png"
         plt.savefig(os.path.join(plots_dir, filename_heatmap), dpi=300)
         plt.close()
+
         
         avg_saliency = saliency_2d.mean(axis=0)
         if avg_saliency.sum() > 0:
@@ -519,10 +567,17 @@ def visualize_saliency(model, dataset, plots_dir, device):
             
         plt.figure(figsize=(10, 4))
         plt.bar(range(25), avg_saliency, color="darkorange", edgecolor='k', alpha=0.9)
+        
+        body_parts_names_bar = {
+            3: "Head", 7: "L Hand", 11: "R Hand", 15: "L Foot", 19: "R Foot", 0: "Spine Base", 20: "Spine Shoulder"
+        }
+        joint_labels = [f"J{j} ({body_parts_names_bar[j]})" if j in body_parts_names_bar else f"J{j}" for j in range(25)]
+        
         plt.xticks(range(25), joint_labels, rotation=90, fontsize=8)
         plt.title(f"Average Joint Saliency Profile\nAction: {action_name}", fontsize=12, fontweight='bold')
         plt.ylabel("Saliency Share")
         plt.grid(axis='y', linestyle="--", alpha=0.5)
+
         plt.tight_layout()
         
         filename_bar = f"saliency_joints_{action_name.replace(' ', '_').lower()}.png"
