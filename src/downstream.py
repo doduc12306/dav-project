@@ -159,20 +159,21 @@ def train_classifier(data_dir, pretrain_path, epochs=15, batch_size=8, lr=1e-3, 
     fig, ax1 = plt.subplots(figsize=(8, 4))
     
     color = '#dc2626'
-    ax1.set_xlabel('Khung Hình/Epoch', fontsize=11)
-    ax1.set_ylabel('Độ Hao Hụt Bộ Phân Lớp (Classifier Loss)', color=color, fontsize=11)
+    ax1.set_xlabel('Epoch', fontsize=11)
+    ax1.set_ylabel('Classifier Loss', color=color, fontsize=11)
     ax1.plot(range(1, epochs+1), train_losses, color=color, marker='s', lw=2, label="Loss")
     ax1.tick_params(axis='y', labelcolor=color)
     
     ax2 = ax1.twinx()  
     color = '#2563eb'
-    ax2.set_ylabel('Độ Chính Xác Tập Test (Test Accuracy %)', color=color, fontsize=11)
+    ax2.set_ylabel('Test Accuracy (%)', color=color, fontsize=11)
     ax2.plot(range(1, epochs+1), [acc * 100 for acc in test_accs], color=color, marker='o', lw=2, label="Accuracy")
     ax2.tick_params(axis='y', labelcolor=color)
     
-    plt.title("Đường Cong Huấn Luyện Bộ Phân Lớp Downstream", fontsize=13, fontweight='bold', pad=15)
+    plt.title("Downstream Classifier Training Curves", fontsize=13, fontweight='bold', pad=15)
     fig.tight_layout()
     plt.savefig(os.path.join(plots_dir, "downstream_training_curves.png"), dpi=300)
+
     plt.close()
     
     # 3. Final Evaluation & Confusion Matrix
