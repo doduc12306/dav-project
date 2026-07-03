@@ -94,32 +94,6 @@ To overcome the "black box" barrier of deep neural networks, two main branches o
 
 We implement the exploratory data analysis (EDA) phase to statistically analyze and identify characteristic properties within the NTU RGB+D 120 dataset.
 
-\subsection{Data Classification in the Problem}
-The input data of the system is strictly classified according to data science theory:
-\begin{enumerate}
-    \item \textbf{Categorical Data:}
-    \begin{itemize}
-        \item \textit{Nominal:} Action Class ($A_c \in \{1, \dots, 120\}$), Subject ID, and Camera ID. This data has no hierarchy or ranking.
-    \end{itemize}
-    \item \textbf{Numerical Data:}
-    \begin{itemize}
-        \item \textit{Discrete:} Time frame sequence length ($T \in [20, 200]$), number of main body joints ($J = 25$).
-        \item \textit{Continuous:} 3D geometric coordinates of joints $(x, y, z) \in \mathbb{R}^3$, instantaneous joint velocity $v_t^j \in \mathbb{R}$.
-    \end{itemize}
-\end{enumerate}
-
-\subsection{Data Visualization}
-We utilize visual charts to analyze the data structure:
-\begin{itemize}
-    \item \textbf{Bar Chart - Figure \ref{fig:action_dist}:} Visualizes the number of samples per action class. The statistics indicate a highly balanced dataset (approximately 900-1000 samples/class).
-    \item \textbf{Histogram - Figure \ref{fig:frame_dist}:} Analyzes frame length, revealing a right-skewed sequence length distribution with an average of 70 to 80 frames.
-    \item \textbf{Line Chart - Figure \ref{fig:joint_dynamics}:} Visualizes the temporal velocity variation trend of joints. The instantaneous velocity calculation for joint $j$ at time $t$ follows the Euclidean distance:
-    \begin{equation}
-    v_t^j = \left\| \mathbf{p}_t^j - \mathbf{p}_{t-1}^j \right\|_2
-    \end{equation}
-    The graph clearly depicts the strong sinusoidal kinetic oscillation of the hand joint in the Waving action (Figure \ref{fig:dyn_waving}), and the synchronous velocity variation of the head and feet in the Jumping action (Figure \ref{fig:dyn_jumping}).
-\end{itemize}
-
 \begin{figure*}[t]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
@@ -157,6 +131,32 @@ We utilize visual charts to analyze the data structure:
     \caption{Line chart visualization comparing the real-time velocity kinetic variations of different joints.}
     \label{fig:joint_dynamics}
 \end{figure*}
+
+\subsection{Data Classification in the Problem}
+The input data of the system is strictly classified according to data science theory:
+\begin{enumerate}
+    \item \textbf{Categorical Data:}
+    \begin{itemize}
+        \item \textit{Nominal:} Action Class ($A_c \in \{1, \dots, 120\}$), Subject ID, and Camera ID. This data has no hierarchy or ranking.
+    \end{itemize}
+    \item \textbf{Numerical Data:}
+    \begin{itemize}
+        \item \textit{Discrete:} Time frame sequence length ($T \in [20, 200]$), number of main body joints ($J = 25$).
+        \item \textit{Continuous:} 3D geometric coordinates of joints $(x, y, z) \in \mathbb{R}^3$, instantaneous joint velocity $v_t^j \in \mathbb{R}$.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Data Visualization}
+We utilize visual charts to analyze the data structure:
+\begin{itemize}
+    \item \textbf{Bar Chart - Figure \ref{fig:action_dist}:} Visualizes the number of samples per action class. The statistics indicate a highly balanced dataset (approximately 900-1000 samples/class).
+    \item \textbf{Histogram - Figure \ref{fig:frame_dist}:} Analyzes frame length, revealing a right-skewed sequence length distribution with an average of 70 to 80 frames.
+    \item \textbf{Line Chart - Figure \ref{fig:joint_dynamics}:} Visualizes the temporal velocity variation trend of joints. The instantaneous velocity calculation for joint $j$ at time $t$ follows the Euclidean distance:
+    \begin{equation}
+    v_t^j = \left\| \mathbf{p}_t^j - \mathbf{p}_{t-1}^j \right\|_2
+    \end{equation}
+    The graph clearly depicts the strong sinusoidal kinetic oscillation of the hand joint in the Waving action (Figure \ref{fig:dyn_waving}), and the synchronous velocity variation of the head and feet in the Jumping action (Figure \ref{fig:dyn_jumping}).
+\end{itemize}
 
 \section{Data Preprocessing, Correlation Analysis, and Model Architecture}
 
