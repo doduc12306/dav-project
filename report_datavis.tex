@@ -739,6 +739,7 @@ Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) beca
 \centering
 \caption{Classification Performance Comparison: Linear Probing vs. Full Fine-Tuning.}
 \label{tab:probe_vs_ft}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcc}
 \toprule
 \textbf{Evaluation Protocol} & \textbf{NTU-120 X-Sub (\%)} & \textbf{NTU-120 X-Set (\%)} \\
@@ -746,7 +747,8 @@ Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) beca
 Linear Probing (Frozen - Ours) & 78.30 & 80.50 \\
 Full Fine-Tuning (Trainable - S-JEPA \cite{b7}) & 80.42 & 82.35 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \section{Conclusion}

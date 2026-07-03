@@ -719,8 +719,8 @@ def visualize_shap(model, dataset, features_norm, labels_class, plots_dir, devic
     joint_labels = [f"J{j} ({body_parts_names[j]})" if j in body_parts_names else f"J{j}" for j in range(25)]
     
     # Plot Waving correlation map
-    plt.figure(figsize=(10, 5))
-    sns.heatmap(corr_waving, annot=True, fmt=".2f", cmap="coolwarm", xticklabels=joint_labels, 
+    plt.figure(figsize=(12, 5))
+    sns.heatmap(corr_waving, annot=True, fmt=".2f", cmap="coolwarm", annot_kws={"size": 7}, xticklabels=joint_labels, 
                 yticklabels=[f"Feature {d}" for d in top_feats_waving], cbar_kws={'label': 'Correlation Coefficient'})
     plt.title(f"Joint-Feature Correlation Map ({class_name_waving})\nConnecting Physical Joints to Latent SHAP Features", fontsize=11, fontweight='bold', pad=15)
     plt.xticks(rotation=45, ha='right', fontsize=8)
@@ -730,8 +730,8 @@ def visualize_shap(model, dataset, features_norm, labels_class, plots_dir, devic
     plt.close()
     
     # Plot Jumping correlation map
-    plt.figure(figsize=(10, 5))
-    sns.heatmap(corr_jumping, annot=True, fmt=".2f", cmap="coolwarm", xticklabels=joint_labels, 
+    plt.figure(figsize=(12, 5))
+    sns.heatmap(corr_jumping, annot=True, fmt=".2f", cmap="coolwarm", annot_kws={"size": 7}, xticklabels=joint_labels, 
                 yticklabels=[f"Feature {d}" for d in top_feats_jumping], cbar_kws={'label': 'Correlation Coefficient'})
     plt.title(f"Joint-Feature Correlation Map ({class_name_jumping})\nConnecting Physical Joints to Latent SHAP Features", fontsize=11, fontweight='bold', pad=15)
     plt.xticks(rotation=45, ha='right', fontsize=8)
