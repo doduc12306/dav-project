@@ -95,6 +95,32 @@ To overcome the "black box" barrier of deep neural networks, two main branches o
 
 We implement the exploratory data analysis (EDA) phase to statistically analyze and identify characteristic properties within the NTU RGB+D 120 dataset.
 
+\subsection{Data Classification in the Problem}
+The input data of the system is strictly classified according to data science theory:
+\begin{enumerate}
+    \item \textbf{Categorical Data:}
+    \begin{itemize}
+        \item \textit{Nominal:} Action Class ($A_c \in \{1, \dots, 120\}$), Subject ID, and Camera ID. This data has no hierarchy or ranking.
+    \end{itemize}
+    \item \textbf{Numerical Data:}
+    \begin{itemize}
+        \item \textit{Discrete:} Time frame sequence length ($T \in [20, 200]$), number of main body joints ($J = 25$).
+        \item \textit{Continuous:} 3D geometric coordinates of joints $(x, y, z) \in \mathbb{R}^3$, instantaneous joint velocity $v_t^j \in \mathbb{R}$.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Data Visualization}
+We utilize visual charts to analyze the data structure:
+\begin{itemize}
+    \item \textbf{Bar Chart - Figure \ref{fig:action_dist}:} Visualizes the number of samples per action class. The statistics indicate a highly balanced dataset (approximately 900-1000 samples/class).
+    \item \textbf{Histogram - Figure \ref{fig:frame_dist}:} Analyzes frame length, revealing a right-skewed sequence length distribution with an average of 70 to 80 frames.
+    \item \textbf{Line Chart - Figure \ref{fig:joint_dynamics}:} Visualizes the temporal velocity variation trend of joints. The instantaneous velocity calculation for joint $j$ at time $t$ follows the Euclidean distance:
+    \begin{equation}
+    v_t^j = \left\| \mathbf{p}_t^j - \mathbf{p}_{t-1}^j \right\|_2
+    \end{equation}
+    The graph clearly depicts the strong sinusoidal kinetic oscillation of the hand joint in the Waving action (Figure \ref{fig:dyn_waving}), and the synchronous velocity variation of the head and feet in the Jumping action (Figure \ref{fig:dyn_jumping}).
+\end{itemize}
+
 \begin{figure*}[t]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
@@ -132,32 +158,6 @@ We implement the exploratory data analysis (EDA) phase to statistically analyze 
     \caption{Line chart visualization comparing the real-time velocity kinetic variations of different joints.}
     \label{fig:joint_dynamics}
 \end{figure*}
-
-\subsection{Data Classification in the Problem}
-The input data of the system is strictly classified according to data science theory:
-\begin{enumerate}
-    \item \textbf{Categorical Data:}
-    \begin{itemize}
-        \item \textit{Nominal:} Action Class ($A_c \in \{1, \dots, 120\}$), Subject ID, and Camera ID. This data has no hierarchy or ranking.
-    \end{itemize}
-    \item \textbf{Numerical Data:}
-    \begin{itemize}
-        \item \textit{Discrete:} Time frame sequence length ($T \in [20, 200]$), number of main body joints ($J = 25$).
-        \item \textit{Continuous:} 3D geometric coordinates of joints $(x, y, z) \in \mathbb{R}^3$, instantaneous joint velocity $v_t^j \in \mathbb{R}$.
-    \end{itemize}
-\end{enumerate}
-
-\subsection{Data Visualization}
-We utilize visual charts to analyze the data structure:
-\begin{itemize}
-    \item \textbf{Bar Chart - Figure \ref{fig:action_dist}:} Visualizes the number of samples per action class. The statistics indicate a highly balanced dataset (approximately 900-1000 samples/class).
-    \item \textbf{Histogram - Figure \ref{fig:frame_dist}:} Analyzes frame length, revealing a right-skewed sequence length distribution with an average of 70 to 80 frames.
-    \item \textbf{Line Chart - Figure \ref{fig:joint_dynamics}:} Visualizes the temporal velocity variation trend of joints. The instantaneous velocity calculation for joint $j$ at time $t$ follows the Euclidean distance:
-    \begin{equation}
-    v_t^j = \left\| \mathbf{p}_t^j - \mathbf{p}_{t-1}^j \right\|_2
-    \end{equation}
-    The graph clearly depicts the strong sinusoidal kinetic oscillation of the hand joint in the Waving action (Figure \ref{fig:dyn_waving}), and the synchronous velocity variation of the head and feet in the Jumping action (Figure \ref{fig:dyn_jumping}).
-\end{itemize}
 
 \section{Data Preprocessing, Correlation Analysis, and Model Architecture}
 
@@ -302,32 +302,6 @@ The self-supervised learning system S-JEPA is built upon three main neural netwo
 
 \section{Feature Selection, Transformation, and Experimental Results}
 
-\begin{figure*}[t]
-    \centering
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_raw_by_camera.png}
-        \caption{Raw latent space by Camera ID}
-        \label{fig:tsne_raw_cam}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_camera.png}
-        \caption{Normalized latent space by Camera ID}
-        \label{fig:tsne_norm_cam}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_class.png}
-        \caption{Normalized latent space by Action Class}
-        \label{fig:tsne_norm_class}
-    \end{subfigure}
-    \caption{t-SNE dimensionality reduction visualization illustrating the View-Invariance Test of the S-JEPA model.}
-    \label{fig:tsne_comparison}
-\end{figure*}
-
 \subsection{Experimental Setup and Training Details}
 The model training and evaluation process is divided into two distinct phases: self-supervised pre-training and Linear Probing evaluation, as outlined in Figure \ref{fig:two_stage_training}.
 
@@ -403,12 +377,6 @@ The model training and evaluation process is divided into two distinct phases: s
 
 \subsection{Feature Selection Strategy}
 
-\begin{figure*}[t]
-    \centering
-    \includegraphics[width=0.95\textwidth]{plots/latent_comparison_tsne_umap_lda.png}
-    \caption{Comparison of the S-JEPA latent feature space via t-SNE, UMAP, and LDA dimensionality reduction projections.}
-    \label{fig:latent_comparison}
-\end{figure*}
 To minimize computational complexity and eliminate joints that do not contribute information to the action, we deploy three feature selection strategies:
 \begin{itemize}
     \item \textbf{Filter Method:} Employs Mutual Information (MI) to compute the non-linear relationship between the movements of 25 skeleton joints and the action class labels. Results indicate that hand joints (joints 7, 11) and foot joints (15, 19) possess significantly higher MI values compared to spine joints (joints 0, 1), suggesting they contain the most information.
@@ -417,6 +385,61 @@ To minimize computational complexity and eliminate joints that do not contribute
 \end{itemize}
 
 \subsection{Feature Transformation and Extraction}
+
+To visualize the $128$-dimensional latent feature space learned from S-JEPA, we benchmark dimensionality reduction transformation methods:
+\begin{enumerate}
+    \item \textbf{PCA (Linear, Unsupervised):} Projects data by finding principal components that maximize global variance via Eigenvalue decomposition of the covariance matrix. PCA assists in extracting orthogonal components describing fundamental motions.
+    \item \textbf{Kernel PCA and ISOMAP (Non-linear, Unsupervised):} Utilizes kernel functions (Kernel PCA) and geodesic distances on neighborhood graphs (ISOMAP) to preserve the non-linear topological structure of skeleton movements. Non-linear projections (t-SNE \cite{b14}, UMAP \cite{b15}) inherit this principle, revealing distinctly separated action clusters (Figure \ref{fig:tsne_norm_class}).
+    \item \textbf{LDA (Linear, Supervised):} Utilizes action labels to find a projection matrix $\mathbf{W}$ that maximizes the ratio of the between-class scatter matrix ($\mathbf{S}_B$) to the within-class scatter matrix ($\mathbf{S}_W$): $\arg\max_{\mathbf{W}} \frac{|\mathbf{W}^T \mathbf{S}_B \mathbf{W}|}{|\mathbf{W}^T \mathbf{S}_W \mathbf{W}|}$. LDA generates exceptionally sharp linear boundaries between classes (Figure \ref{fig:latent_comparison}).
+\end{enumerate}
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_raw_by_camera.png}
+        \caption{Raw latent space by Camera ID}
+        \label{fig:tsne_raw_cam}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_camera.png}
+        \caption{Normalized latent space by Camera ID}
+        \label{fig:tsne_norm_cam}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.98\linewidth]{plots/tsne_latent_space_by_class.png}
+        \caption{Normalized latent space by Action Class}
+        \label{fig:tsne_norm_class}
+    \end{subfigure}
+    \caption{t-SNE dimensionality reduction visualization illustrating the View-Invariance Test of the S-JEPA model.}
+    \label{fig:tsne_comparison}
+\end{figure*}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.95\textwidth]{plots/latent_comparison_tsne_umap_lda.png}
+    \caption{Comparison of the S-JEPA latent feature space via t-SNE, UMAP, and LDA dimensionality reduction projections.}
+    \label{fig:latent_comparison}
+\end{figure*}
+
+\subsection{Model Explanation via Attention Rollout (XAI - Attention)}
+We apply the Attention Rollout algorithm to explain the attention flow. In a self-attention layer $l$, the raw attention matrix $A^{(l)}$ is computed from the Query ($Q$) and Key ($K$) matrices. To account for the influence of residual connections, the attention matrix of each layer is normalized by adding the identity matrix $\mathbf{I}$:
+\begin{equation}
+\tilde{A}^{(l)} = 0.5 A^{(l)} + 0.5 \mathbf{I}
+\end{equation}
+To track information propagation from the first layer to the final layer $L$, the Rollout matrix is computed via recursive matrix multiplication:
+\begin{equation}
+\mathbf{A}_{\text{rollout}} = \prod_{l=1}^{L} \tilde{A}^{(l)}
+\end{equation}
+The attention distribution results are visualized in Figure \ref{fig:attention_rollout}:
+\begin{itemize}
+    \item \textbf{Waving Action (Figure \ref{fig:attn_waving}):} Attention is heavily concentrated on both hands (Left/Right Arm) with a total value of over $65\%$, while the legs receive under $10\%$ attention.
+    \item \textbf{Jumping Action (Figure \ref{fig:attn_jumping}):} As expected, the model focuses an enormous amount of attention on both legs (Left/Right Leg) and the lower body to capture the kinetic momentum of the jump preparation, proving that the S-JEPA model has learned the core physical features rather than misallocating attention.
+\end{itemize}
 
 \begin{figure*}[t]
     \centering
@@ -436,27 +459,6 @@ To minimize computational complexity and eliminate joints that do not contribute
     \caption{Attention Share maps distributed across human body parts by the S-JEPA model for each action.}
     \label{fig:attention_rollout}
 \end{figure*}
-To visualize the $128$-dimensional latent feature space learned from S-JEPA, we benchmark dimensionality reduction transformation methods:
-\begin{enumerate}
-    \item \textbf{PCA (Linear, Unsupervised):} Projects data by finding principal components that maximize global variance via Eigenvalue decomposition of the covariance matrix. PCA assists in extracting orthogonal components describing fundamental motions.
-    \item \textbf{Kernel PCA and ISOMAP (Non-linear, Unsupervised):} Utilizes kernel functions (Kernel PCA) and geodesic distances on neighborhood graphs (ISOMAP) to preserve the non-linear topological structure of skeleton movements. Non-linear projections (t-SNE \cite{b14}, UMAP \cite{b15}) inherit this principle, revealing distinctly separated action clusters (Figure \ref{fig:tsne_norm_class}).
-    \item \textbf{LDA (Linear, Supervised):} Utilizes action labels to find a projection matrix $\mathbf{W}$ that maximizes the ratio of the between-class scatter matrix ($\mathbf{S}_B$) to the within-class scatter matrix ($\mathbf{S}_W$): $\arg\max_{\mathbf{W}} \frac{|\mathbf{W}^T \mathbf{S}_B \mathbf{W}|}{|\mathbf{W}^T \mathbf{S}_W \mathbf{W}|}$. LDA generates exceptionally sharp linear boundaries between classes (Figure \ref{fig:latent_comparison}).
-\end{enumerate}
-
-\subsection{Model Explanation via Attention Rollout (XAI - Attention)}
-We apply the Attention Rollout algorithm to explain the attention flow. In a self-attention layer $l$, the raw attention matrix $A^{(l)}$ is computed from the Query ($Q$) and Key ($K$) matrices. To account for the influence of residual connections, the attention matrix of each layer is normalized by adding the identity matrix $\mathbf{I}$:
-\begin{equation}
-\tilde{A}^{(l)} = 0.5 A^{(l)} + 0.5 \mathbf{I}
-\end{equation}
-To track information propagation from the first layer to the final layer $L$, the Rollout matrix is computed via recursive matrix multiplication:
-\begin{equation}
-\mathbf{A}_{\text{rollout}} = \prod_{l=1}^{L} \tilde{A}^{(l)}
-\end{equation}
-The attention distribution results are visualized in Figure \ref{fig:attention_rollout}:
-\begin{itemize}
-    \item \textbf{Waving Action (Figure \ref{fig:attn_waving}):} Attention is heavily concentrated on both hands (Left/Right Arm) with a total value of over $65\%$, while the legs receive under $10\%$ attention.
-    \item \textbf{Jumping Action (Figure \ref{fig:attn_jumping}):} As expected, the model focuses an enormous amount of attention on both legs (Left/Right Leg) and the lower body to capture the kinetic momentum of the jump preparation, proving that the S-JEPA model has learned the core physical features rather than misallocating attention.
-\end{itemize}
 
 \subsection{Spatio-Temporal Sensitivity Maps via Gradient Saliency (XAI - Sensitivity)}
 We apply the Gradient Saliency technique to directly evaluate the sensitivity of the output prediction to the joints. This method is the mathematical foundation for CAM, Grad-CAM, Grad-CAM++, and Integrated Gradients algorithms. The sensitivity $S_{t, j}$ of joint $j$ at frame $t$ for action class $c$ is calculated by the L2 norm of the gradient of the prediction score $f_c(\mathbf{X})$ with respect to the joint coordinate $\mathbf{p}_{t}^j$:
@@ -493,60 +495,6 @@ This result affirms that the model genuinely relies on the geometric kinematics 
 
 
 
-\begin{figure*}[t]
-\centering
-\resizebox{0.9\textwidth}{!}{%
-\begin{tikzpicture}[
-    node distance=0.8cm and 1.2cm,
-    block/.style={draw, rectangle, fill=blue!10, text width=2.2cm, minimum height=0.8cm, align=center, rounded corners, font=\small},
-    input/.style={draw, ellipse, fill=gray!10, text width=1.8cm, minimum height=0.6cm, align=center, font=\small},
-    classifier/.style={draw, rectangle, fill=green!10, text width=2.2cm, minimum height=0.8cm, align=center, rounded corners, font=\small},
-    fusion/.style={draw, circle, fill=yellow!15, minimum size=1.2cm, align=center, font=\small},
-    output/.style={draw, rectangle, fill=red!10, text width=2.2cm, minimum height=0.6cm, align=center, rounded corners, font=\small},
-    arrow/.style={-latex, thick}
-]
-
-    % Inputs
-    \node [input] (in_joint) {Joint Sequence};
-    \node [input, below=of in_joint, yshift=-0.2cm] (in_bone) {Bone Sequence};
-    \node [input, below=of in_bone, yshift=-0.2cm] (in_velo) {Velocity Sequence};
-
-    % Encoders
-    \node [block, right=of in_joint] (enc_joint) {S-JEPA Encoder\\(Joint)};
-    \node [block, right=of in_bone] (enc_bone) {S-JEPA Encoder\\(Bone)};
-    \node [block, right=of in_velo] (enc_velo) {S-JEPA Encoder\\(Velocity)};
-
-    % Linear Classifiers
-    \node [classifier, right=of enc_joint] (cls_joint) {Linear Probing\\Classifier};
-    \node [classifier, right=of enc_bone] (cls_bone) {Linear Probing\\Classifier};
-    \node [classifier, right=of enc_velo] (cls_velo) {Linear Probing\\Classifier};
-
-    % Fusion Node
-    \node [fusion, right=of cls_bone, xshift=0.5cm] (fusion) {Weighted\\Late\\Fusion};
-
-    % Output
-    \node [output, right=of fusion] (out) {Predicted\\Action Class};
-
-    % Connections
-    \draw [arrow] (in_joint) -- (enc_joint);
-    \draw [arrow] (in_bone) -- (enc_bone);
-    \draw [arrow] (in_velo) -- (enc_velo);
-
-    \draw [arrow] (enc_joint) -- (cls_joint);
-    \draw [arrow] (enc_bone) -- (cls_bone);
-    \draw [arrow] (enc_velo) -- (cls_velo);
-
-    \draw [arrow] (cls_joint) -| node[above, xshift=-0.5cm, font=\scriptsize] {$\alpha \cdot P_J$} (fusion);
-    \draw [arrow] (cls_bone) -- node[above, font=\scriptsize] {$\beta \cdot P_B$} (fusion);
-    \draw [arrow] (cls_velo) -| node[below, xshift=-0.5cm, font=\scriptsize] {$\gamma \cdot P_V$} (fusion);
-
-    \draw [arrow] (fusion) -- (out);
-
-\end{tikzpicture}%
-}
-\caption{The Multi-stream Late Fusion pipeline diagram of the S-JEPA model.}
-\label{fig:late_fusion_arch}
-\end{figure*}
 To provide post-hoc explanations of the contribution mechanism of the S-JEPA model's latent features to the downstream linear classifier, we apply SHAP (Shapley Additive exPlanations) cooperative game theory. This is a Model-Agnostic method similar to LIME and ANCHORS. The Shapley value $\phi_i$ measures the marginal contribution of the $i$-th feature within the latent feature set $F$ to the classifier's prediction outcome:
 \begin{equation}
 \label{eq:shap_val}
@@ -604,11 +552,60 @@ To directly connect these abstract latent features to the physical body joints (
 To quantitatively evaluate the representational capacity of S-JEPA, we assess the classification accuracy via a Linear Probing model on three individual feature streams (Joint, Bone, Velocity) and an Ensemble combination using the Weighted Late Fusion technique (the pipeline diagram is detailed in Figure \ref{fig:late_fusion_arch}).
 
 \begin{figure*}[t]
-    \centering
-    \includegraphics[width=0.65\textwidth]{plots/confusion_matrix_ntu120_xsub.png}
-    \caption{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}
-    \label{fig:confusion_matrix}
+\centering
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.2cm,
+    block/.style={draw, rectangle, fill=blue!10, text width=2.2cm, minimum height=0.8cm, align=center, rounded corners, font=\small},
+    input/.style={draw, ellipse, fill=gray!10, text width=1.8cm, minimum height=0.6cm, align=center, font=\small},
+    classifier/.style={draw, rectangle, fill=green!10, text width=2.2cm, minimum height=0.8cm, align=center, rounded corners, font=\small},
+    fusion/.style={draw, circle, fill=yellow!15, minimum size=1.2cm, align=center, font=\small},
+    output/.style={draw, rectangle, fill=red!10, text width=2.2cm, minimum height=0.6cm, align=center, rounded corners, font=\small},
+    arrow/.style={-latex, thick}
+]
+
+    % Inputs
+    \node [input] (in_joint) {Joint Sequence};
+    \node [input, below=of in_joint, yshift=-0.2cm] (in_bone) {Bone Sequence};
+    \node [input, below=of in_bone, yshift=-0.2cm] (in_velo) {Velocity Sequence};
+
+    % Encoders
+    \node [block, right=of in_joint] (enc_joint) {S-JEPA Encoder\\(Joint)};
+    \node [block, right=of in_bone] (enc_bone) {S-JEPA Encoder\\(Bone)};
+    \node [block, right=of in_velo] (enc_velo) {S-JEPA Encoder\\(Velocity)};
+
+    % Linear Classifiers
+    \node [classifier, right=of enc_joint] (cls_joint) {Linear Probing\\Classifier};
+    \node [classifier, right=of enc_bone] (cls_bone) {Linear Probing\\Classifier};
+    \node [classifier, right=of enc_velo] (cls_velo) {Linear Probing\\Classifier};
+
+    % Fusion Node
+    \node [fusion, right=of cls_bone, xshift=0.5cm] (fusion) {Weighted\\Late\\Fusion};
+
+    % Output
+    \node [output, right=of fusion] (out) {Predicted\\Action Class};
+
+    % Connections
+    \draw [arrow] (in_joint) -- (enc_joint);
+    \draw [arrow] (in_bone) -- (enc_bone);
+    \draw [arrow] (in_velo) -- (enc_velo);
+
+    \draw [arrow] (enc_joint) -- (cls_joint);
+    \draw [arrow] (enc_bone) -- (cls_bone);
+    \draw [arrow] (enc_velo) -- (cls_velo);
+
+    \draw [arrow] (cls_joint) -| node[above, xshift=-0.5cm, font=\scriptsize] {$\alpha \cdot P_J$} (fusion);
+    \draw [arrow] (cls_bone) -- node[above, font=\scriptsize] {$\beta \cdot P_B$} (fusion);
+    \draw [arrow] (cls_velo) -| node[below, xshift=-0.5cm, font=\scriptsize] {$\gamma \cdot P_V$} (fusion);
+
+    \draw [arrow] (fusion) -- (out);
+
+\end{tikzpicture}%
+}
+\caption{The Multi-stream Late Fusion pipeline diagram of the S-JEPA model.}
+\label{fig:late_fusion_arch}
 \end{figure*}
+
 To quantitatively evaluate the representational capacity of S-JEPA, we assess the classification accuracy via a Linear Probing model on three individual feature streams (Joint, Bone, Velocity) and an Ensemble combination using the Weighted Late Fusion technique (the pipeline diagram is detailed in Figure \ref{fig:late_fusion_arch}).
 
 
@@ -673,7 +670,17 @@ The Heatmap Confusion Matrix (Figure \ref{fig:confusion_matrix}) provides profou
     \item Mild confusion occurs between closely interacting pairs such as Punching and Pushing due to the significant similarity in shoulder extension and elbow joint straightening movements.
 \end{itemize}
 
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.65\textwidth]{plots/confusion_matrix_ntu120_xsub.png}
+    \caption{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}
+    \label{fig:confusion_matrix}
+\end{figure*}
+
 \subsection{Training Dynamics, Computational Performance, and Finetuning Comparison}
+
+\subsubsection{Training Dynamics and Convergence}
+We analyze the training dynamics of the S-JEPA model in both the self-supervised pre-training and downstream linear probing phases (Figure \ref{fig:training_dynamics}). During the self-supervised pre-training phase, S-JEPA minimizes the L2 distance between the target patch representation and the predicted representation. As shown in Figure \ref{fig:training_dynamics}(a), the pre-training loss converges smoothly from $0.95$ to $0.058$ over 15 epochs. The stable convergence demonstrates S-JEPA's ability to learn consistent spatio-temporal representations from raw skeleton sequences without requiring label supervision.
 
 \begin{figure*}[t]
     \centering
@@ -694,15 +701,10 @@ The Heatmap Confusion Matrix (Figure \ref{fig:confusion_matrix}) provides profou
     \label{fig:training_dynamics}
 \end{figure*}
 
-\subsubsection{Training Dynamics and Convergence}
-We analyze the training dynamics of the S-JEPA model in both the self-supervised pre-training and downstream linear probing phases (Figure \ref{fig:training_dynamics}). During the self-supervised pre-training phase, S-JEPA minimizes the L2 distance between the target patch representation and the predicted representation. As shown in Figure \ref{fig:training_dynamics}(a), the pre-training loss converges smoothly from $0.95$ to $0.058$ over 15 epochs. The stable convergence demonstrates S-JEPA's ability to learn consistent spatio-temporal representations from raw skeleton sequences without requiring label supervision.
-
 In the downstream evaluation phase, a linear probing classifier is trained on the frozen representations. Figure \ref{fig:training_dynamics}(b) presents the learning curves (loss and accuracy) over 10 epochs. The training and validation curves track each other closely, reaching a stable validation accuracy of over $73.7\%$ on the Joint stream. The absence of a generalization gap between training and validation sets indicates the high stability and robustness of S-JEPA features against overfitting.
 
 \subsubsection{Computational Complexity and Efficiency}
 To evaluate the computational efficiency of S-JEPA, we measure the training and inference time complexity. The experiment is conducted on an NVIDIA workstation with an RTX 4090 GPU. The computational times for each stage are detailed in Table \ref{tab:comp_time}.
-
-Pre-training S-JEPA on the NTU RGB+D dataset requires only $1.5$ hours for 15 epochs. Downstream linear probing training is completed in just $5$ minutes. More importantly, the inference latency per sequence is only $2.4$ ms, corresponding to a processing speed of over $400$ frames per second (fps). This high efficiency proves S-JEPA is highly suitable for real-time human action recognition applications on edge devices.
 
 \begin{table}[htbp]
 \centering
@@ -721,16 +723,10 @@ Downstream Full Fine-Tuning & 10 & 15 minutes \\
 \end{tabular}
 \end{table}
 
+Pre-training S-JEPA on the NTU RGB+D dataset requires only $1.5$ hours for 15 epochs. Downstream linear probing training is completed in just $5$ minutes. More importantly, the inference latency per sequence is only $2.4$ ms, corresponding to a processing speed of over $400$ frames per second (fps). This high efficiency proves S-JEPA is highly suitable for real-time human action recognition applications on edge devices.
+
 \subsubsection{Linear Probing vs. Full Fine-Tuning Analysis}
 To justify the choice of Linear Probing (frozen S-JEPA backbone) as our primary downstream evaluation method, we compare its performance and characteristics with Full Fine-Tuning reported in the original S-JEPA work \cite{b7}, where all weights of the Context Encoder are updated. The comparative results are summarized in Table \ref{tab:probe_vs_ft}.
-
-Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) because the S-JEPA backbone weights are optimized to adapt directly to class boundaries. However, Linear Probing offers significant practical advantages:
-\begin{enumerate}
-    \item \textbf{Unbiased Evaluation of Self-Supervised Features:} Freezing the S-JEPA backbone guarantees that downstream performance is a direct measure of the representations learned during pre-training. It proves the backbone has captured intrinsic skeleton kinematics (e.g., bone structures, joint dynamics) that are linearly separable.
-    \item \textbf{Computational Efficiency:} Freezing the backbone eliminates backpropagation through the Transformer blocks. This reduces GPU memory consumption by more than $60\%$ and speeds up training by a factor of 3 (from 15 minutes to 5 minutes).
-    \item \textbf{Robustness to Overfitting:} Since a linear model has extremely low capacity, it is highly robust to overfitting. This is critical when downstream labeled data is small or imbalanced.
-    \item \textbf{Catastrophic Forgetting Prevention:} Keeping the backbone frozen allows a single S-JEPA model to serve as a general-purpose feature extractor for multiple downstream tasks (e.g., action recognition, pose estimation, gesture control) simultaneously without cross-task degradation.
-\end{enumerate}
 
 \begin{table}[htbp]
 \centering
@@ -747,6 +743,14 @@ Full Fine-Tuning (Trainable - S-JEPA \cite{b7}) & 80.42 & 82.35 \\
 \end{tabular}%
 }
 \end{table}
+
+Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) because the S-JEPA backbone weights are optimized to adapt directly to class boundaries. However, Linear Probing offers significant practical advantages:
+\begin{enumerate}
+    \item \textbf{Unbiased Evaluation of Self-Supervised Features:} Freezing the S-JEPA backbone guarantees that downstream performance is a direct measure of the representations learned during pre-training. It proves the backbone has captured intrinsic skeleton kinematics (e.g., bone structures, joint dynamics) that are linearly separable.
+    \item \textbf{Computational Efficiency:} Freezing the backbone eliminates backpropagation through the Transformer blocks. This reduces GPU memory consumption by more than $60\%$ and speeds up training by a factor of 3 (from 15 minutes to 5 minutes).
+    \item \textbf{Robustness to Overfitting:} Since a linear model has extremely low capacity, it is highly robust to overfitting. This is critical when downstream labeled data is small or imbalanced.
+    \item \textbf{Catastrophic Forgetting Prevention:} Keeping the backbone frozen allows a single S-JEPA model to serve as a general-purpose feature extractor for multiple downstream tasks (e.g., action recognition, pose estimation, gesture control) simultaneously without cross-task degradation.
+\end{enumerate}
 
 \balance
 \section{Conclusion}

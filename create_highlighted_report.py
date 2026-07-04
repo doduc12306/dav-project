@@ -36,7 +36,7 @@ print("[OK] email")
 # ── 2b. Highlight reordered author name (Duc moved to first) ─────────────────
 txt = txt.replace(
     r'\IEEEauthorblockN{Do Nguyen Anh Duc (202414618), Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}',
-    r'\IEEEauthorblockN{\colorbox{yellow!40}{\parbox{\linewidth}{\centering Do Nguyen Anh Duc (202414618), Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}}}'
+    r'\IEEEauthorblockN{\hl{Do Nguyen Anh Duc (202414618), Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}}'
 )
 print("[OK] author order highlight")
 
@@ -86,41 +86,52 @@ NEW5 = r"""\begin{newcontent}
 print("[OK] block5" if OLD5 in txt else "[!!] MISS block5")
 txt = txt.replace(OLD5, NEW5, 1)
 
-# ── 6. Training Dynamics text (2 paragraphs, wrap before next subsubsection) 
-OLD6 = r"""\subsubsection{Training Dynamics and Convergence}
-We analyze the training dynamics of the S-JEPA model in both the self-supervised pre-training and downstream linear probing phases (Figure \ref{fig:training_dynamics}). During the self-supervised pre-training phase, S-JEPA minimizes the L2 distance between the target patch representation and the predicted representation. As shown in Figure \ref{fig:training_dynamics}(a), the pre-training loss converges smoothly from $0.95$ to $0.058$ over 15 epochs. The stable convergence demonstrates S-JEPA's ability to learn consistent spatio-temporal representations from raw skeleton sequences without requiring label supervision.
+# ── 6. Training Dynamics text (split into A and B) ───────────────────────────
+OLD6A = r"""\subsubsection{Training Dynamics and Convergence}
+We analyze the training dynamics of the S-JEPA model in both the self-supervised pre-training and downstream linear probing phases (Figure \ref{fig:training_dynamics}). During the self-supervised pre-training phase, S-JEPA minimizes the L2 distance between the target patch representation and the predicted representation. As shown in Figure \ref{fig:training_dynamics}(a), the pre-training loss converges smoothly from $0.95$ to $0.058$ over 15 epochs. The stable convergence demonstrates S-JEPA's ability to learn consistent spatio-temporal representations from raw skeleton sequences without requiring label supervision."""
 
-In the downstream evaluation phase, a linear probing classifier is trained on the frozen representations. Figure \ref{fig:training_dynamics}(b) presents the learning curves (loss and accuracy) over 10 epochs. The training and validation curves track each other closely, reaching a stable validation accuracy of over $73.7\%$ on the Joint stream. The absence of a generalization gap between training and validation sets indicates the high stability and robustness of S-JEPA features against overfitting."""
-
-NEW6 = r"""\begin{newcontent}
+NEW6A = r"""\begin{newcontent}
 \subsubsection{Training Dynamics and Convergence}
 We analyze the training dynamics of the S-JEPA model in both the self-supervised pre-training and downstream linear probing phases (Figure \ref{fig:training_dynamics}). During the self-supervised pre-training phase, S-JEPA minimizes the L2 distance between the target patch representation and the predicted representation. As shown in Figure \ref{fig:training_dynamics}(a), the pre-training loss converges smoothly from $0.95$ to $0.058$ over 15 epochs. The stable convergence demonstrates S-JEPA's ability to learn consistent spatio-temporal representations from raw skeleton sequences without requiring label supervision.
+\end{newcontent}"""
 
+OLD6B = r"""In the downstream evaluation phase, a linear probing classifier is trained on the frozen representations. Figure \ref{fig:training_dynamics}(b) presents the learning curves (loss and accuracy) over 10 epochs. The training and validation curves track each other closely, reaching a stable validation accuracy of over $73.7\%$ on the Joint stream. The absence of a generalization gap between training and validation sets indicates the high stability and robustness of S-JEPA features against overfitting."""
+
+NEW6B = r"""\begin{newcontent}
 In the downstream evaluation phase, a linear probing classifier is trained on the frozen representations. Figure \ref{fig:training_dynamics}(b) presents the learning curves (loss and accuracy) over 10 epochs. The training and validation curves track each other closely, reaching a stable validation accuracy of over $73.7\%$ on the Joint stream. The absence of a generalization gap between training and validation sets indicates the high stability and robustness of S-JEPA features against overfitting.
 \end{newcontent}"""
-print("[OK] block6" if OLD6 in txt else "[!!] MISS block6")
-txt = txt.replace(OLD6, NEW6, 1)
 
-# ── 7. Computational text (before table) ─────────────────────────────────────
-OLD7 = r"""\subsubsection{Computational Complexity and Efficiency}
-To evaluate the computational efficiency of S-JEPA, we measure the training and inference time complexity. The experiment is conducted on an NVIDIA workstation with an RTX 4090 GPU. The computational times for each stage are detailed in Table \ref{tab:comp_time}.
+txt = txt.replace(OLD6A, NEW6A, 1)
+txt = txt.replace(OLD6B, NEW6B, 1)
 
-Pre-training S-JEPA on the NTU RGB+D dataset requires only $1.5$ hours for 15 epochs. Downstream linear probing training is completed in just $5$ minutes. More importantly, the inference latency per sequence is only $2.4$ ms, corresponding to a processing speed of over $400$ frames per second (fps). This high efficiency proves S-JEPA is highly suitable for real-time human action recognition applications on edge devices."""
+# ── 7. Computational text (split into A and B) ───────────────────────────────
+OLD7A = r"""\subsubsection{Computational Complexity and Efficiency}
+To evaluate the computational efficiency of S-JEPA, we measure the training and inference time complexity. The experiment is conducted on an NVIDIA workstation with an RTX 4090 GPU. The computational times for each stage are detailed in Table \ref{tab:comp_time}."""
 
-NEW7 = r"""\begin{newcontent}
+NEW7A = r"""\begin{newcontent}
 \subsubsection{Computational Complexity and Efficiency}
 To evaluate the computational efficiency of S-JEPA, we measure the training and inference time complexity. The experiment is conducted on an NVIDIA workstation with an RTX 4090 GPU. The computational times for each stage are detailed in Table \ref{tab:comp_time}.
+\end{newcontent}"""
 
+OLD7B = r"""Pre-training S-JEPA on the NTU RGB+D dataset requires only $1.5$ hours for 15 epochs. Downstream linear probing training is completed in just $5$ minutes. More importantly, the inference latency per sequence is only $2.4$ ms, corresponding to a processing speed of over $400$ frames per second (fps). This high efficiency proves S-JEPA is highly suitable for real-time human action recognition applications on edge devices."""
+
+NEW7B = r"""\begin{newcontent}
 Pre-training S-JEPA on the NTU RGB+D dataset requires only $1.5$ hours for 15 epochs. Downstream linear probing training is completed in just $5$ minutes. More importantly, the inference latency per sequence is only $2.4$ ms, corresponding to a processing speed of over $400$ frames per second (fps). This high efficiency proves S-JEPA is highly suitable for real-time human action recognition applications on edge devices.
 \end{newcontent}"""
-print("[OK] block7" if OLD7 in txt else "[!!] MISS block7")
-txt = txt.replace(OLD7, NEW7, 1)
 
-# ── 8. LP vs FT text + enumerate (before table) ──────────────────────────────
-OLD8 = r"""\subsubsection{Linear Probing vs. Full Fine-Tuning Analysis}
+txt = txt.replace(OLD7A, NEW7A, 1)
+txt = txt.replace(OLD7B, NEW7B, 1)
+
+# ── 8. LP vs FT text (split into A and B) ────────────────────────────────────
+OLD8A = r"""\subsubsection{Linear Probing vs. Full Fine-Tuning Analysis}
+To justify the choice of Linear Probing (frozen S-JEPA backbone) as our primary downstream evaluation method, we compare its performance and characteristics with Full Fine-Tuning reported in the original S-JEPA work \cite{b7}, where all weights of the Context Encoder are updated. The comparative results are summarized in Table \ref{tab:probe_vs_ft}."""
+
+NEW8A = r"""\begin{newcontent}
+\subsubsection{Linear Probing vs. Full Fine-Tuning Analysis}
 To justify the choice of Linear Probing (frozen S-JEPA backbone) as our primary downstream evaluation method, we compare its performance and characteristics with Full Fine-Tuning reported in the original S-JEPA work \cite{b7}, where all weights of the Context Encoder are updated. The comparative results are summarized in Table \ref{tab:probe_vs_ft}.
+\end{newcontent}"""
 
-Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) because the S-JEPA backbone weights are optimized to adapt directly to class boundaries. However, Linear Probing offers significant practical advantages:
+OLD8B = r"""Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) because the S-JEPA backbone weights are optimized to adapt directly to class boundaries. However, Linear Probing offers significant practical advantages:
 \begin{enumerate}
     \item \textbf{Unbiased Evaluation of Self-Supervised Features:} Freezing the S-JEPA backbone guarantees that downstream performance is a direct measure of the representations learned during pre-training. It proves the backbone has captured intrinsic skeleton kinematics (e.g., bone structures, joint dynamics) that are linearly separable.
     \item \textbf{Computational Efficiency:} Freezing the backbone eliminates backpropagation through the Transformer blocks. This reduces GPU memory consumption by more than $60\%$ and speeds up training by a factor of 3 (from 15 minutes to 5 minutes).
@@ -128,10 +139,7 @@ Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) beca
     \item \textbf{Catastrophic Forgetting Prevention:} Keeping the backbone frozen allows a single S-JEPA model to serve as a general-purpose feature extractor for multiple downstream tasks (e.g., action recognition, pose estimation, gesture control) simultaneously without cross-task degradation.
 \end{enumerate}"""
 
-NEW8 = r"""\begin{newcontent}
-\subsubsection{Linear Probing vs. Full Fine-Tuning Analysis}
-To justify the choice of Linear Probing (frozen S-JEPA backbone) as our primary downstream evaluation method, we compare its performance and characteristics with Full Fine-Tuning reported in the original S-JEPA work \cite{b7}, where all weights of the Context Encoder are updated. The comparative results are summarized in Table \ref{tab:probe_vs_ft}.
-
+NEW8B = r"""\begin{newcontent}
 Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) because the S-JEPA backbone weights are optimized to adapt directly to class boundaries. However, Linear Probing offers significant practical advantages:
 \begin{enumerate}
     \item \textbf{Unbiased Evaluation of Self-Supervised Features:} Freezing the S-JEPA backbone guarantees that downstream performance is a direct measure of the representations learned during pre-training. It proves the backbone has captured intrinsic skeleton kinematics (e.g., bone structures, joint dynamics) that are linearly separable.
@@ -140,43 +148,45 @@ Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) beca
     \item \textbf{Catastrophic Forgetting Prevention:} Keeping the backbone frozen allows a single S-JEPA model to serve as a general-purpose feature extractor for multiple downstream tasks (e.g., action recognition, pose estimation, gesture control) simultaneously without cross-task degradation.
 \end{enumerate}
 \end{newcontent}"""
-print("[OK] block8" if OLD8 in txt else "[!!] MISS block8")
-txt = txt.replace(OLD8, NEW8, 1)
+
+txt = txt.replace(OLD8A, NEW8A, 1)
+txt = txt.replace(OLD8B, NEW8B, 1)
 
 # ── 9. Captions of new/modified figures and tables ────────────────────────────
-# Use \caption[short text]{highlighted text} so hyperref bookmarks stay clean
+# Use \hl for natural text wrapping in captions
 CAPS = [
     # Figure 4 (Changed caption)
     (
         r"\caption{3D skeleton before/after geometric normalization (Action A27).}",
-        r"\caption[3D skeleton geometric normalization.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{3D skeleton before/after geometric normalization (Action A27).}}}"
+        r"\caption[3D skeleton geometric normalization.]{\hl{3D skeleton before/after geometric normalization (Action A27).}}"
     ),
     # Figure 10 (Saliency heatmap - layout changed/considered modified)
     (
         r"\caption{Spatio-temporal Gradient Saliency Heatmap demonstrating the model's decision sensitivity to skeleton joints over time.}",
-        r"\caption[Spatio-temporal Gradient Saliency Heatmap.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Spatio-temporal Gradient Saliency Heatmap demonstrating the model's decision sensitivity to skeleton joints over time.}}}"
+        r"\caption[Spatio-temporal Gradient Saliency Heatmap.]{\hl{Spatio-temporal Gradient Saliency Heatmap demonstrating the model's decision sensitivity to skeleton joints over time.}}"
     ),
     (
         r"\caption{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}",
-        r"\caption[Joint-Feature Correlation maps.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}}}"
+        r"\caption[Joint-Feature Correlation maps.]{\hl{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}}"
     ),
     (
         r"\caption{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}",
-        r"\caption[Training dynamics of S-JEPA.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}}}"
+        r"\caption[Training dynamics of S-JEPA.]{\hl{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}}"
     ),
     (
         r"\caption{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}",
-        r"\caption[Confusion Matrix -- Ensemble Weighted Late Fusion (78.30\%).]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}}}"
+        r"\caption[Confusion Matrix -- Ensemble Weighted Late Fusion (78.30\%).]{\hl{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}}"
     ),
     (
         r"\caption{Computational Training and Inference Complexity of S-JEPA.}",
-        r"\caption[Computational Complexity of S-JEPA.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Computational Training and Inference Complexity of S-JEPA.}}}"
+        r"\caption[Computational Complexity of S-JEPA.]{\hl{Computational Training and Inference Complexity of S-JEPA.}}"
     ),
     (
         r"\caption{Classification Performance Comparison: Linear Probing vs. Full Fine-Tuning.}",
-        r"\caption[Linear Probing vs. Full Fine-Tuning.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Classification Performance Comparison: Linear Probing vs. Full Fine-Tuning.}}}"
+        r"\caption[Linear Probing vs. Full Fine-Tuning.]{\hl{Classification Performance Comparison: Linear Probing vs. Full Fine-Tuning.}}"
     ),
 ]
+
 for old_c, new_c in CAPS:
     found = old_c in txt
     print(f"[{'OK' if found else '!!'}] caption: {old_c[9:50]}...")
