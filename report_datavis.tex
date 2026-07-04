@@ -13,9 +13,7 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric,arrows,positioning,calc}
 \usepackage[section]{placeins}
-
-
-
+\usepackage{balance}
 
 \linespread{0.95}
 \setlength{\textfloatsep}{5pt}
@@ -25,6 +23,7 @@
 \setlength{\belowcaptionskip}{-5pt}
 
 \begin{document}
+\raggedbottom
 
 \title{Kinematic Analysis and Explainability of the S-JEPA Architecture on the NTU RGB+D 120 Dataset}
 
@@ -198,24 +197,24 @@ Additionally, auxiliary feature streams such as velocity are normalized using th
 
 Figure \ref{fig:skeleton_comparison} visualizes the comparison between the raw skeleton sequence (skewed by camera position) and the normalized coordinates across keyframes, demonstrating the effective elimination of view bias through geometric normalization.
 
-\begin{figure*}[t]
+\begin{figure}[h]
     \centering
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[b]{0.48\linewidth}
         \centering
-        \includegraphics[width=0.98\linewidth]{plots/S006C001P023R002A027_raw_3d.png}
-        \caption{Raw skeleton coordinates tilted by the C001 camera angle.}
+        \includegraphics[width=\linewidth]{plots/S006C001P023R002A027_raw_3d.png}
+        \caption{Raw (camera-biased)}
         \label{fig:skele_raw}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[b]{0.48\linewidth}
         \centering
-        \includegraphics[width=0.98\linewidth]{plots/S006C001P023R002A027_normalized_3d.png}
-        \caption{Normalized coordinates, straightened and translated to the Spine Base.}
+        \includegraphics[width=\linewidth]{plots/S006C001P023R002A027_normalized_3d.png}
+        \caption{Normalized (view-invariant)}
         \label{fig:skele_norm}
     \end{subfigure}
-    \caption{Visualization of 3D skeleton frames at different timestamps before and after geometric normalization (Action A27: Jump up).}
+    \caption{3D skeleton before/after geometric normalization (Action A27).}
     \label{fig:skeleton_comparison}
-\end{figure*}
+\end{figure}
 
 \subsection{Feature Correlation Analysis}
 We apply statistical metrics to evaluate the correlation between joint motions:
@@ -404,7 +403,7 @@ The model training and evaluation process is divided into two distinct phases: s
 
 \begin{figure*}[t]
     \centering
-    \includegraphics[width=0.95	extwidth]{plots/latent_comparison_tsne_umap_lda.png}
+    \includegraphics[width=0.95\textwidth]{plots/latent_comparison_tsne_umap_lda.png}
     \caption{Comparison of the S-JEPA latent feature space via t-SNE, UMAP, and LDA dimensionality reduction projections.}
     \label{fig:latent_comparison}
 \end{figure*}
@@ -443,6 +442,31 @@ To visualize the $128$-dimensional latent feature space learned from S-JEPA, we 
 \end{enumerate}
 
 \subsection{Model Explanation via Attention Rollout (XAI - Attention)}
+We apply the Attention Rollout algorithm to explain the attention flow. In a self-attention layer $l$, the raw attention matrix $A^{(l)}$ is computed from the Query ($Q$) and Key ($K$) matrices. To account for the influence of residual connections, the attention matrix of each layer is normalized by adding the identity matrix $\mathbf{I}$:
+\begin{equation}
+\tilde{A}^{(l)} = 0.5 A^{(l)} + 0.5 \mathbf{I}
+\end{equation}
+To track information propagation from the first layer to the final layer $L$, the Rollout matrix is computed via recursive matrix multiplication:
+\begin{equation}
+\mathbf{A}_{\text{rollout}} = \prod_{l=1}^{L} \tilde{A}^{(l)}
+\end{equation}
+The attention distribution results are visualized in Figure \ref{fig:attention_rollout}:
+\begin{itemize}
+    \item \textbf{Waving Action (Figure \ref{fig:attn_waving}):} Attention is heavily concentrated on both hands (Left/Right Arm) with a total value of over $65\%$, while the legs receive under $10\%$ attention.
+    \item \textbf{Jumping Action (Figure \ref{fig:attn_jumping}):} As expected, the model focuses an enormous amount of attention on both legs (Left/Right Leg) and the lower body to capture the kinetic momentum of the jump preparation, proving that the S-JEPA model has learned the core physical features rather than misallocating attention.
+\end{itemize}
+
+\subsection{Spatio-Temporal Sensitivity Maps via Gradient Saliency (XAI - Sensitivity)}
+We apply the Gradient Saliency technique to directly evaluate the sensitivity of the output prediction to the joints. This method is the mathematical foundation for CAM, Grad-CAM, Grad-CAM++, and Integrated Gradients algorithms. The sensitivity $S_{t, j}$ of joint $j$ at frame $t$ for action class $c$ is calculated by the L2 norm of the gradient of the prediction score $f_c(\mathbf{X})$ with respect to the joint coordinate $\mathbf{p}_{t}^j$:
+\begin{equation}
+S_{t, j} = \left\| \nabla_{\mathbf{p}_{t}^j} f_c(\mathbf{X}) \right\|_2
+\end{equation}
+These values are normalized to the range $[0, 1]$ to plot the heatmap (Figure \ref{fig:saliency_comparison}):
+\begin{itemize}
+    \item \textbf{Waving Action (Figure \ref{fig:saliency_heatmap_waving}):} Sensitivity is highly concentrated on the left/right hand joints (joints 7 and 11) during the frames executing the waving motion.
+    \item \textbf{Jumping Action (Figure \ref{fig:saliency_heatmap_jumping}):} Saliency dynamically changes over time, with peaks concentrated at lower limb joints such as the hips, knees, and feet during the momentum-gathering and liftoff frames, indicating that the model highly values the coordinate changes of the legs in recognizing this action.
+\end{itemize}
+This result affirms that the model genuinely relies on the geometric kinematics of the exact characteristic moving joints to make classification decisions, akin to the feature region localization mechanism of Grad-CAM.
 
 \begin{figure*}[t]
     \centering
@@ -462,56 +486,10 @@ To visualize the $128$-dimensional latent feature space learned from S-JEPA, we 
     \caption{Spatio-temporal Gradient Saliency Heatmap demonstrating the model's decision sensitivity to skeleton joints over time.}
     \label{fig:saliency_comparison}
 \end{figure*}
-We apply the Attention Rollout algorithm to explain the attention flow. In a self-attention layer $l$, the raw attention matrix $A^{(l)}$ is computed from the Query ($Q$) and Key ($K$) matrices. To account for the influence of residual connections, the attention matrix of each layer is normalized by adding the identity matrix $\mathbf{I}$:
-\begin{equation}
-\tilde{A}^{(l)} = 0.5 A^{(l)} + 0.5 \mathbf{I}
-\end{equation}
-To track information propagation from the first layer to the final layer $L$, the Rollout matrix is computed via recursive matrix multiplication:
-\begin{equation}
-\mathbf{A}_{\text{rollout}} = \prod_{l=1}^{L} \tilde{A}^{(l)}
-\end{equation}
-The attention distribution results are visualized in Figure \ref{fig:attention_rollout}:
-\begin{itemize}
-    \item \textbf{Waving Action (Figure \ref{fig:attn_waving}):} Attention is heavily concentrated on both hands (Left/Right Arm) with a total value of over $65\%$, while the legs receive under $10\%$ attention.
-    \item \textbf{Jumping Action (Figure \ref{fig:attn_jumping}):} As expected, the model focuses an enormous amount of attention on both legs (Left/Right Leg) and the lower body to capture the kinetic momentum of the jump preparation, proving that the S-JEPA model has learned the core physical features rather than misallocating attention.
-\end{itemize}
-
-
-
-\subsection{Spatio-Temporal Sensitivity Maps via Gradient Saliency (XAI - Sensitivity)}
-
-\begin{figure*}[t]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=0.98\linewidth]{plots/shap_summary_waving.png}
-        \caption{Feature contribution for Waving hand}
-        \label{fig:shap_waving}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=0.98\linewidth]{plots/shap_summary_jumping.png}
-        \caption{Feature contribution for Jumping}
-        \label{fig:shap_jumping}
-    \end{subfigure}
-    \caption{SHAP Feature Importance chart explaining the contribution of S-JEPA latent features to classification decisions.}
-    \label{fig:shap_comparison}
-\end{figure*}
-We apply the Gradient Saliency technique to directly evaluate the sensitivity of the output prediction to the joints. This method is the mathematical foundation for CAM, Grad-CAM, Grad-CAM++, and Integrated Gradients algorithms. The sensitivity $S_{t, j}$ of joint $j$ at frame $t$ for action class $c$ is calculated by the L2 norm of the gradient of the prediction score $f_c(\mathbf{X})$ with respect to the joint coordinate $\mathbf{p}_{t}^j$:
-\begin{equation}
-S_{t, j} = \left\| \nabla_{\mathbf{p}_{t}^j} f_c(\mathbf{X}) \right\|_2
-\end{equation}
-These values are normalized to the range $[0, 1]$ to plot the heatmap (Figure \ref{fig:saliency_comparison}):
-\begin{itemize}
-    \item \textbf{Waving Action (Figure \ref{fig:saliency_heatmap_waving}):} Sensitivity is highly concentrated on the left/right hand joints (joints 7 and 11) during the frames executing the waving motion.
-    \item \textbf{Jumping Action (Figure \ref{fig:saliency_heatmap_jumping}):} Saliency dynamically changes over time, with peaks concentrated at lower limb joints such as the hips, knees, and feet during the momentum-gathering and liftoff frames, indicating that the model highly values the coordinate changes of the legs in recognizing this action.
-\end{itemize}
-This result affirms that the model genuinely relies on the geometric kinematics of the exact characteristic moving joints to make classification decisions, akin to the feature region localization mechanism of Grad-CAM.
-
-
 
 \subsection{Explaining Latent Features with Shapley Values (XAI - SHAP)}
+
+
 
 \begin{figure*}[t]
 \centering
@@ -576,6 +554,25 @@ Where $S$ is a subset of features chosen from the latent space excluding feature
 
 The SHAP Feature Importance chart (Figure \ref{fig:shap_comparison}) illustrates the marginal contribution of the latent dimensions. The analysis indicates that only a small subset of approximately 10 latent features has an overwhelmingly prominent marginal contribution for each action class. Features carrying hand movement information actively contribute to the Waving Hand class, while features describing height variations actively contribute to the Jumping class. This mathematically elucidates the transparency of the S-JEPA latent space.
 
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=0.98\linewidth]{plots/shap_summary_waving.png}
+        \caption{Feature contribution for Waving hand}
+        \label{fig:shap_waving}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=0.98\linewidth]{plots/shap_summary_jumping.png}
+        \caption{Feature contribution for Jumping}
+        \label{fig:shap_jumping}
+    \end{subfigure}
+    \caption{SHAP Feature Importance chart explaining the contribution of S-JEPA latent features to classification decisions.}
+    \label{fig:shap_comparison}
+\end{figure*}
+
 To directly connect these abstract latent features to the physical body joints (bridging SHAP and Gradient Saliency), we compute the Pearson correlation coefficient between the joint-specific tokens and the global aggregated representations across action samples. The Joint-Feature Correlation maps are illustrated in Figure \ref{fig:joint_feature_relation}:
 \begin{itemize}
     \item \textbf{Waving Hand (Figure \ref{fig:joint_feat_waving}):} The top latent classifier features (e.g., Features 43, 76) show exceptionally high positive correlation (above $0.70$) specifically with the left and right hand joints ($J_7$ and $J_{11}$), showing that the model's most critical waving features directly encode hand movements.
@@ -602,10 +599,11 @@ To directly connect these abstract latent features to the physical body joints (
 \end{figure*}
 
 \subsection{Downstream Model Evaluation and Error Analysis}
+To quantitatively evaluate the representational capacity of S-JEPA, we assess the classification accuracy via a Linear Probing model on three individual feature streams (Joint, Bone, Velocity) and an Ensemble combination using the Weighted Late Fusion technique (the pipeline diagram is detailed in Figure \ref{fig:late_fusion_arch}).
 
 \begin{figure*}[t]
     \centering
-    \includegraphics[width=0.7\textwidth]{plots/confusion_matrix_ntu120_xsub.png}
+    \includegraphics[width=0.90\textwidth]{plots/confusion_matrix_ntu120_xsub.png}
     \caption{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}
     \label{fig:confusion_matrix}
 \end{figure*}
@@ -673,29 +671,26 @@ The Heatmap Confusion Matrix (Figure \ref{fig:confusion_matrix}) provides profou
     \item Mild confusion occurs between closely interacting pairs such as Punching and Pushing due to the significant similarity in shoulder extension and elbow joint straightening movements.
 \end{itemize}
 
-
-
+\subsection{Training Dynamics, Computational Performance, and Finetuning Comparison}
 
 \begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[b]{0.50\textwidth}
         \centering
-        \includegraphics[width=0.98\linewidth]{plots/sjepa_pretrain_loss.png}
+        \includegraphics[width=\linewidth]{plots/sjepa_pretrain_loss.png}
         \caption{Self-Supervised Pre-training Loss (MSE)}
         \label{fig:pretrain_loss}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[b]{0.46\textwidth}
         \centering
-        \includegraphics[width=0.98\linewidth]{plots/downstream_training_curves.png}
+        \includegraphics[width=\linewidth]{plots/downstream_training_curves.png}
         \caption{Downstream Linear Probing Training \& Validation}
         \label{fig:downstream_curves}
     \end{subfigure}
-    \caption{Training dynamics of S-JEPA showing self-supervised pre-training loss convergence (left) and downstream linear probing training/validation curves (right).}
+    \caption{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}
     \label{fig:training_dynamics}
 \end{figure*}
-
-\subsection{Training Dynamics, Computational Performance, and Finetuning Comparison}
 
 \subsubsection{Training Dynamics and Convergence}
 We analyze the training dynamics of the S-JEPA model in both the self-supervised pre-training and downstream linear probing phases (Figure \ref{fig:training_dynamics}). During the self-supervised pre-training phase, S-JEPA minimizes the L2 distance between the target patch representation and the predicted representation. As shown in Figure \ref{fig:training_dynamics}(a), the pre-training loss converges smoothly from $0.95$ to $0.058$ over 15 epochs. The stable convergence demonstrates S-JEPA's ability to learn consistent spatio-temporal representations from raw skeleton sequences without requiring label supervision.
@@ -751,6 +746,7 @@ Full Fine-Tuning (Trainable - S-JEPA \cite{b7}) & 80.42 & 82.35 \\
 }
 \end{table}
 
+\balance
 \section{Conclusion}
 This study has successfully deployed and experimentally validated the S-JEPA self-supervised learning system for the 3D skeleton-based action recognition task on NTU RGB+D 120, intricately linked with core knowledge in the data science pipeline. By synergizing skeleton kinematics analysis tools (EDA), statistical preprocessing and outlier removal methods, linear/non-linear feature correlation analysis (Pearson, Spearman, Chi-square), geometric feature extraction dimensionality reduction (PCA, Kernel PCA, ISOMAP, LDA), and model interpretability via XAI (SHAP, Attention, Gradient Saliency), we have perfected a comprehensive data analysis and visualization system, paving a highly promising direction for real-world human behavior surveillance applications.
 
