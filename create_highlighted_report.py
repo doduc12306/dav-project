@@ -33,6 +33,23 @@ txt = txt.replace(
 )
 print("[OK] email")
 
+# ── 2b. Highlight reordered author name (Duc moved to first) ─────────────────
+txt = txt.replace(
+    r'\IEEEauthorblockN{Do Nguyen Anh Duc (202414618), Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}',
+    r'\IEEEauthorblockN{\colorbox{yellow!40}{Do Nguyen Anh Duc (202414618)}, Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}'
+)
+print("[OK] author order highlight")
+
+TEXT_REPLACEMENTS = [
+    # 2.5 Abstract sentence
+    (
+        r"to demystify the learned latent feature space. Experimental results demonstrate that the proposed multi-stream S-JEPA framework achieves competitive performance, reaching 78.30\% on NTU-120 X-Sub and 80.50\% on NTU-120 X-Set through weighted late fusion, while maintaining high computational efficiency.",
+        r"""to demystify the learned latent feature space. \begin{newcontent}Experimental results demonstrate that the proposed multi-stream S-JEPA framework achieves competitive performance, reaching 78.30\% on NTU-120 X-Sub and 80.50\% on NTU-120 X-Set through weighted late fusion, while maintaining high computational efficiency.\end{newcontent}"""
+    ),
+]
+for old_s, new_s in TEXT_REPLACEMENTS:
+    txt = txt.replace(old_s, new_s, 1)
+
 # ── 3. Joint-feature paragraph + itemize (wrap only text, stop before figure*) 
 OLD3 = r"""To directly connect these abstract latent features to the physical body joints (bridging SHAP and Gradient Saliency), we compute the Pearson correlation coefficient between the joint-specific tokens and the global aggregated representations across action samples. The Joint-Feature Correlation maps are illustrated in Figure \ref{fig:joint_feature_relation}:
 \begin{itemize}
@@ -129,6 +146,16 @@ txt = txt.replace(OLD8, NEW8, 1)
 # ── 9. Captions of new/modified figures and tables ────────────────────────────
 # Use \caption[short text]{highlighted text} so hyperref bookmarks stay clean
 CAPS = [
+    # Figure 4 (Changed caption)
+    (
+        r"\caption{3D skeleton before/after geometric normalization (Action A27).}",
+        r"\caption[3D skeleton geometric normalization.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{3D skeleton before/after geometric normalization (Action A27).}}}"
+    ),
+    # Figure 10 (Saliency heatmap - layout changed/considered modified)
+    (
+        r"\caption{Spatio-temporal Gradient Saliency Heatmap demonstrating the model's decision sensitivity to skeleton joints over time.}",
+        r"\caption[Spatio-temporal Gradient Saliency Heatmap.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Spatio-temporal Gradient Saliency Heatmap demonstrating the model's decision sensitivity to skeleton joints over time.}}}"
+    ),
     (
         r"\caption{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}",
         r"\caption[Joint-Feature Correlation maps.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}}}"
