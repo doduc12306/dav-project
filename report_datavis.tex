@@ -67,20 +67,20 @@ To overcome the "black box" barrier of deep neural networks, two main branches o
 \end{itemize}
 
 \section{Data Science Pipeline and Exploratory Data Analysis (EDA)}
-\begin{figure*}[t]
+\begin{figure}[htbp]
 \centering
-\resizebox{0.9\textwidth}{!}{%
+\resizebox{0.8\linewidth}{!}{%
 \begin{tikzpicture}[
-    node distance=0.8cm and 1.0cm,
+    node distance=0.4cm,
     step_node/.style={draw, rectangle, fill=blue!8, text width=2.5cm, minimum height=1.2cm, align=center, rounded corners, font=\small, draw=blue!40, thick},
     arrow/.style={-latex, thick, draw=gray!60}
 ]
     \node [step_node] (collect) {Data Collection\\(NTU RGB+D 120)};
-    \node [step_node, right=of collect] (preprocess) {Preprocessing \&\\Normalization};
-    \node [step_node, right=of preprocess] (clean) {Cleaning \& Filtering\\(Tukey IQR \& DBSCAN)};
-    \node [step_node, right=of clean] (eda) {EDA \& Validation\\(Charts \& Pearson/$\chi^2$)};
-    \node [step_node, right=of eda] (model) {Modeling\\(S-JEPA Pre-training)};
-    \node [step_node, right=of model] (xai) {Visualization \& XAI\\(SHAP, Saliency, CM)};
+    \node [step_node, below=of collect] (preprocess) {Preprocessing \&\\Normalization};
+    \node [step_node, below=of preprocess] (clean) {Cleaning \& Filtering\\(Tukey IQR \& DBSCAN)};
+    \node [step_node, below=of clean] (eda) {EDA \& Validation\\(Charts \& Pearson/$\chi^2$)};
+    \node [step_node, below=of eda] (model) {Modeling\\(S-JEPA Pre-training)};
+    \node [step_node, below=of model] (xai) {Visualization \& XAI\\(SHAP, Saliency, CM)};
     
     \draw [arrow] (collect) -- (preprocess);
     \draw [arrow] (preprocess) -- (clean);
@@ -91,7 +91,7 @@ To overcome the "black box" barrier of deep neural networks, two main branches o
 }
 \caption{The comprehensive Data Science pipeline diagram implemented in the study.}
 \label{fig:ds_pipeline}
-\end{figure*}
+\end{figure}
 
 We implement the exploratory data analysis (EDA) phase to statistically analyze and identify characteristic properties within the NTU RGB+D 120 dataset.
 
