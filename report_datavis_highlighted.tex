@@ -39,7 +39,7 @@
 \title{Kinematic Analysis and Explainability of the S-JEPA Architecture on the NTU RGB+D 120 Dataset}
 
 \author{
-\IEEEauthorblockN{\colorbox{yellow!40}{Do Nguyen Anh Duc (202414618)}, Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}
+\IEEEauthorblockN{\colorbox{yellow!40}{\parbox{\linewidth}{\centering Do Nguyen Anh Duc (202414618), Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}}}
 \IEEEauthorblockA{\textit{School of Electrical and Electronic Engineering} \\
 \textit{Hanoi University of Science and Technology}\\
 \colorbox{yellow!50}{duc.dna2414618@sis.hust.edu.vn}}
@@ -209,16 +209,16 @@ Additionally, auxiliary feature streams such as velocity are normalized using th
 
 Figure \ref{fig:skeleton_comparison} visualizes the comparison between the raw skeleton sequence (skewed by camera position) and the normalized coordinates across keyframes, demonstrating the effective elimination of view bias through geometric normalization.
 
-\begin{figure}[h]
+\begin{figure*}[t]
     \centering
-    \begin{subfigure}[b]{0.48\linewidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/S006C001P023R002A027_raw_3d.png}
         \caption{Raw (camera-biased)}
         \label{fig:skele_raw}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48\linewidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{plots/S006C001P023R002A027_normalized_3d.png}
         \caption{Normalized (view-invariant)}
@@ -226,7 +226,7 @@ Figure \ref{fig:skeleton_comparison} visualizes the comparison between the raw s
     \end{subfigure}
     \caption[3D skeleton geometric normalization.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{3D skeleton before/after geometric normalization (Action A27).}}}
     \label{fig:skeleton_comparison}
-\end{figure}
+\end{figure*}
 
 \subsection{Feature Correlation Analysis}
 We apply statistical metrics to evaluate the correlation between joint motions:

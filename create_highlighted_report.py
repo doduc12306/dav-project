@@ -36,7 +36,7 @@ print("[OK] email")
 # ── 2b. Highlight reordered author name (Duc moved to first) ─────────────────
 txt = txt.replace(
     r'\IEEEauthorblockN{Do Nguyen Anh Duc (202414618), Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}',
-    r'\IEEEauthorblockN{\colorbox{yellow!40}{Do Nguyen Anh Duc (202414618)}, Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}'
+    r'\IEEEauthorblockN{\colorbox{yellow!40}{\parbox{\linewidth}{\centering Do Nguyen Anh Duc (202414618), Nguyen Quang Tung (20233884), Nguyen Thi Thuy Huyen (20233854)}}}'
 )
 print("[OK] author order highlight")
 
