@@ -181,8 +181,8 @@ def plot_confusion_matrix(labels, preds, num_classes, save_path="confusion_matri
                     yticklabels=[str(i+1) for i in class_indices])
         plt.xticks(rotation=90, fontsize=6)
         plt.yticks(rotation=0, fontsize=6)
-        plt.xlabel('Mã Lớp Hành Động Dự Đoán (Predicted Class ID)', fontsize=11, labelpad=10)
-        plt.ylabel('Mã Lớp Hành Động Thực Tế (True Class ID)', fontsize=11, labelpad=10)
+        plt.xlabel('Predicted Class ID', fontsize=11, labelpad=10)
+        plt.ylabel('True Class ID', fontsize=11, labelpad=10)
     else:
         sns.heatmap(cm_norm, annot=False if not is_subset else True, cmap='Blues', 
                     xticklabels=class_names, yticklabels=class_names)
