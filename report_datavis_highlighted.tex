@@ -608,7 +608,7 @@ To directly connect these abstract latent features to the physical body joints (
         \caption{Joint-Feature Correlation (Jumping)}
         \label{fig:joint_feat_jumping}
     \end{subfigure}
-    \caption{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}
+    \caption[Joint-Feature Correlation maps.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Joint-Feature Correlation maps connecting the top 5 SHAP features (latent space) directly to the physical joint representations (spatial dimensions).}}}
     \label{fig:joint_feature_relation}
 \end{figure*}
 
@@ -620,7 +620,7 @@ To quantitatively evaluate the representational capacity of S-JEPA, we assess th
 \begin{figure*}[t]
     \centering
     \includegraphics[width=0.65\textwidth]{plots/confusion_matrix_ntu120_xsub.png}
-    \caption{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}
+    \caption[Confusion Matrix -- Ensemble Weighted Late Fusion (78.30\%).]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Confusion Matrix of the Ensemble Weighted Late Fusion classifier on NTU-120 X-Sub ($78.30\%$ accuracy).}}}
     \label{fig:confusion_matrix}
 \end{figure*}
 To quantitatively evaluate the representational capacity of S-JEPA, we assess the classification accuracy via a Linear Probing model on three individual feature streams (Joint, Bone, Velocity) and an Ensemble combination using the Weighted Late Fusion technique (the pipeline diagram is detailed in Figure \ref{fig:late_fusion_arch}).
@@ -706,7 +706,7 @@ The Heatmap Confusion Matrix (Figure \ref{fig:confusion_matrix}) provides profou
         \caption{Downstream Linear Probing Training \& Validation}
         \label{fig:downstream_curves}
     \end{subfigure}
-    \caption{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}
+    \caption[Training dynamics of S-JEPA.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}}}
     \label{fig:training_dynamics}
 \end{figure*}
 
@@ -726,7 +726,7 @@ Pre-training S-JEPA on the NTU RGB+D dataset requires only $1.5$ hours for 15 ep
 
 \begin{table}[htbp]
 \centering
-\caption{Computational Training and Inference Complexity of S-JEPA.}
+\caption[Computational Complexity of S-JEPA.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Computational Training and Inference Complexity of S-JEPA.}}}
 \label{tab:comp_time}
 \begin{tabular}{lcc}
 \toprule
@@ -756,7 +756,7 @@ Full Fine-Tuning yields slightly higher accuracy (+2.12\% on NTU-120 X-Sub) beca
 
 \begin{table}[htbp]
 \centering
-\caption{Classification Performance Comparison: Linear Probing vs. Full Fine-Tuning.}
+\caption[Linear Probing vs. Full Fine-Tuning.]{\setlength{\fboxsep}{2pt}\colorbox{yellow!40}{\parbox{\dimexpr\linewidth-4pt\relax}{Classification Performance Comparison: Linear Probing vs. Full Fine-Tuning.}}}
 \label{tab:probe_vs_ft}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcc}
