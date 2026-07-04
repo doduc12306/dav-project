@@ -551,6 +551,25 @@ To directly connect these abstract latent features to the physical body joints (
     \label{fig:joint_feature_relation}
 \end{figure}
 
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.95\linewidth}
+        \centering
+        \includegraphics[width=0.75\linewidth]{plots/sjepa_pretrain_loss.png}
+        \caption{Self-Supervised Pre-training Loss (MSE)}
+        \label{fig:pretrain_loss}
+    \end{subfigure}
+    \vspace{0.2cm}
+    \begin{subfigure}[b]{0.95\linewidth}
+        \centering
+        \includegraphics[width=0.75\linewidth]{plots/downstream_training_curves.png}
+        \caption{Downstream Linear Probing Training \& Validation}
+        \label{fig:downstream_curves}
+    \end{subfigure}
+    \caption{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}
+    \label{fig:training_dynamics}
+\end{figure}
+
 \subsection{Downstream Model Evaluation and Error Analysis}
 To quantitatively evaluate the representational capacity of S-JEPA, we assess the classification accuracy via a Linear Probing model on three individual feature streams (Joint, Bone, Velocity) and an Ensemble combination using the Weighted Late Fusion technique (the pipeline diagram is detailed in Figure \ref{fig:late_fusion_arch}).
 
@@ -685,24 +704,7 @@ The Heatmap Confusion Matrix (Figure \ref{fig:confusion_matrix}) provides profou
 \subsubsection{Training Dynamics and Convergence}
 We analyze the training dynamics of the S-JEPA model in both the self-supervised pre-training and downstream linear probing phases (Figure \ref{fig:training_dynamics}). During the self-supervised pre-training phase, S-JEPA minimizes the L2 distance between the target patch representation and the predicted representation. As shown in Figure \ref{fig:training_dynamics}(a), the pre-training loss converges smoothly from $0.95$ to $0.058$ over 15 epochs. The stable convergence demonstrates S-JEPA's ability to learn consistent spatio-temporal representations from raw skeleton sequences without requiring label supervision.
 
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.95\linewidth}
-        \centering
-        \includegraphics[width=0.75\linewidth]{plots/sjepa_pretrain_loss.png}
-        \caption{Self-Supervised Pre-training Loss (MSE)}
-        \label{fig:pretrain_loss}
-    \end{subfigure}
-    \vspace{0.2cm}
-    \begin{subfigure}[b]{0.95\linewidth}
-        \centering
-        \includegraphics[width=0.75\linewidth]{plots/downstream_training_curves.png}
-        \caption{Downstream Linear Probing Training \& Validation}
-        \label{fig:downstream_curves}
-    \end{subfigure}
-    \caption{Training dynamics of S-JEPA: (a) self-supervised pre-training loss convergence over 15 epochs, (b) downstream linear probing learning curves over 10 epochs.}
-    \label{fig:training_dynamics}
-\end{figure}
+
 
 In the downstream evaluation phase, a linear probing classifier is trained on the frozen representations. Figure \ref{fig:training_dynamics}(b) presents the learning curves (loss and accuracy) over 10 epochs. The training and validation curves track each other closely, reaching a stable validation accuracy of over $73.7\%$ on the Joint stream. The absence of a generalization gap between training and validation sets indicates the high stability and robustness of S-JEPA features against overfitting.
 
